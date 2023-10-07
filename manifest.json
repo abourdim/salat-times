@@ -1,0 +1,16 @@
+{
+  "name": "Salat Times — Prayer Times",
+  "short_name": "Salat Times",
+  "description": "Accurate Islamic prayer times with mosque sync, Qibla direction, and nearby mosques",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070b18",
+  "theme_color": "#7eb8da",
+  "orientation": "portrait",
+  "icons": [
+    {"src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-512-bg.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "categories": ["lifestyle", "utilities"]
+}

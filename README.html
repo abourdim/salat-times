@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salat Times — Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--bg2:#111827;--card:#1a2235;--border:#1e293b;--text:#e2e8f0;--text2:#94a3b8;
+  --accent:#7eb8da;--accent2:#e8a838;--green:#4ade80;--red:#ef4444;--purple:#a78bfa}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.7;max-width:900px;margin:0 auto;padding:32px 20px}
+h1{font-size:2rem;margin-bottom:8px;color:#fff}
+h1 span{font-size:2.2rem}
+h2{font-size:1.3rem;color:var(--accent);margin:40px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{font-size:1rem;color:var(--accent2);margin:24px 0 10px}
+p{margin:8px 0;color:var(--text2)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85em;color:var(--green)}
+pre{background:var(--bg2);padding:16px;border-radius:10px;overflow-x:auto;margin:12px 0;border:1px solid var(--border)}
+pre code{background:none;padding:0;color:var(--text)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.9rem}
+th{background:var(--bg2);color:var(--accent);text-align:left;padding:10px 12px;border:1px solid var(--border);font-weight:600}
+td{padding:8px 12px;border:1px solid var(--border);color:var(--text2)}
+tr:hover td{background:rgba(126,184,218,.04)}
+.badges{display:flex;gap:8px;margin:12px 0 24px;flex-wrap:wrap}
+.badge{padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:600;letter-spacing:.5px}
+.badge-blue{background:rgba(126,184,218,.12);color:var(--accent);border:1px solid rgba(126,184,218,.25)}
+.badge-green{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge-purple{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.subtitle{color:var(--text2);font-size:.95rem;margin-bottom:4px;font-style:italic}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:12px 0}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.feature-icon{font-size:1.4rem;margin-bottom:6px}
+.feature-title{font-weight:600;color:#fff;font-size:.9rem}
+.feature-desc{font-size:.78rem;color:var(--text2);margin-top:4px}
+.tree{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+  font-family:'JetBrains Mono','Fira Code',monospace;font-size:.82rem;line-height:1.8;color:var(--text2)}
+.tree span{color:var(--accent)}
+.tree em{color:var(--text2);font-style:normal;opacity:.5}
+.steps{counter-reset:step}
+.steps li{counter-increment:step;list-style:none;padding:8px 0 8px 36px;position:relative;color:var(--text2);font-size:.9rem}
+.steps li::before{content:counter(step);position:absolute;left:0;top:8px;width:24px;height:24px;
+  background:var(--accent);color:var(--bg);border-radius:50%;font-size:.72rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+.footer-doc{text-align:center;padding:32px 0 16px;color:var(--text2);font-size:.8rem}
+.footer-doc strong{color:var(--accent)}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:24px 0}
+.toc-title{font-weight:700;color:#fff;margin-bottom:10px;font-size:.95rem}
+.toc a{display:block;padding:4px 0;color:var(--text2);font-size:.85rem;transition:color .2s}
+.toc a:hover{color:var(--accent);text-decoration:none}
+.bism{text-align:center;font-size:1.3rem;color:var(--text2);opacity:.3;padding:8px 0;font-family:serif}
+</style>
+</head>
+<body>
+
+<div class="bism">﷽</div>
+
+<h1><span>🕌</span> Salat Times</h1>
+<p class="subtitle">Prayer Times PWA + micro:bit V2 Adhan Lantern</p>
+<div class="badges">
+  <span class="badge badge-blue">v1.0</span>
+  <span class="badge badge-green">PWA Ready</span>
+  <span class="badge badge-purple">BLE micro:bit</span>
+</div>
+<p>A single-file Islamic prayer times web app with BLE-connected Adhan Lantern. Zero build tools. Zero dependencies. Works offline.</p>
+
+<div class="toc">
+  <div class="toc-title">📑 Contents</div>
+  <a href="#features">✨ Features</a>
+  <a href="#structure">📁 Project Structure</a>
+  <a href="#quickstart">🚀 Quick Start</a>
+  <a href="#settings">⚙️ Settings</a>
+  <a href="#ble">📡 BLE Protocol</a>
+  <a href="#lantern">🏮 Adhan Lantern</a>
+  <a href="#hardening">🛡️ Hardening</a>
+  <a href="#tech">🔧 Built With</a>
+</div>
+
+<h2 id="features">✨ Features</h2>
+
+<div class="grid">
+  <div class="feature">
+    <div class="feature-icon">🕐</div>
+    <div class="feature-title">Dual Prayer Engines</div>
+    <div class="feature-desc">PrayTimes.js v2.3 + Adhan.js v4.4.3 with side-by-side comparison mode. 8 calculation methods + custom angles.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">⏱️</div>
+    <div class="feature-title">Live Countdown</div>
+    <div class="feature-desc">Real-time countdown to next prayer with auto-advance through the day. Prayer icon + name display.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🕌</div>
+    <div class="feature-title">Mosque Sync</div>
+    <div class="feature-desc">Per-prayer ±30 min offsets to match your local mosque. Mawaqit direct link integration.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🧭</div>
+    <div class="feature-title">Qibla & Map</div>
+    <div class="feature-desc">Qibla direction, GPS geolocation, city search, nearby mosques via Overpass API with mirror failover.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🎨</div>
+    <div class="feature-title">3 Islamic Themes</div>
+    <div class="feature-desc">Najm (deep space stars), Andalusia (warm golden arches), Khat (light parchment calligraphy).</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🌐</div>
+    <div class="feature-title">3 Languages</div>
+    <div class="feature-desc">English, Français, العربية with full RTL support. SVG flag buttons work on all platforms.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🏮</div>
+    <div class="feature-title">Adhan Lantern</div>
+    <div class="feature-desc">BLE UART to micro:bit V2. LED animations, speaker melodies, button interactions. Prayer alerts.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">📱</div>
+    <div class="feature-title">PWA</div>
+    <div class="feature-desc">Installable, offline-capable, custom icons. Service worker caches all assets. Clear cache in settings.</div>
+  </div>
+</div>
+
+<h3>Themes</h3>
+<table>
+  <tr><th>Theme</th><th>Style</th></tr>
+  <tr><td>🌙 Najm (Star)</td><td>Deep space blue with geometric star patterns</td></tr>
+  <tr><td>🕌 Andalusia</td><td>Warm golden arches, Islamic art motifs</td></tr>
+  <tr><td>📜 Khat (Calligraphy)</td><td>Light parchment with arabesque patterns</td></tr>
+</table>
+
+<h2 id="structure">📁 Project Structure</h2>
+<div class="tree">
+  salat-times/<br>
+  ├── <span>index.html</span> <em>— Complete app (single file, ~1280 lines)</em><br>
+  ├── <span>manifest.json</span> <em>— PWA manifest</em><br>
+  ├── <span>sw.js</span> <em>— Service worker (offline cache)</em><br>
+  ├── <span>adhan-lantern.ts</span> <em>— micro:bit V2 MakeCode firmware</em><br>
+  ├── <span>favicon.ico</span> <em>— Browser tab icon</em><br>
+  ├── <span>plug-icon.svg</span> <em>— SVG favicon</em><br>
+  ├── <span>apple-touch-icon.png</span> <em>— iOS icon (180×180)</em><br>
+  ├── <span>icon-512.png</span> <em>— Android/PWA icon (512×512)</em><br>
+  ├── <span>icon-512-bg.png</span> <em>— Maskable PWA icon (512×512)</em><br>
+  └── <span>README.md</span>
+</div>
+
+<h2 id="quickstart">🚀 Quick Start</h2>
+
+<h3>Web App</h3>
+<ol class="steps">
+  <li>Clone the repo: <code>git clone https://github.com/abourdim/salat-times.git</code></li>
+  <li>Open <code>index.html</code> in Chrome or Edge</li>
+  <li>Grant location access for accurate times (optional — defaults to Chelles, FR)</li>
+</ol>
+<p>Or visit: <a href="https://abourdim.github.io/salat-times/" target="_blank"><strong>abourdim.github.io/salat-times</strong></a></p>
+
+<h3>Adhan Lantern (micro:bit V2)</h3>
+<ol class="steps">
+  <li>Go to <a href="https://makecode.microbit.org" target="_blank">makecode.microbit.org</a></li>
+  <li>New project → add <strong>Bluetooth</strong> extension</li>
+  <li>Switch to <strong>TypeScript</strong> editor</li>
+  <li>Paste contents of <code>adhan-lantern.ts</code></li>
+  <li>Project Settings → <strong>No Pairing Required</strong> = ON</li>
+  <li>Download → drag <code>.hex</code> to MICROBIT drive</li>
+  <li>Open the web app in Chrome → click <strong>🏮 Connect Lantern</strong></li>
+</ol>
+
+<h2 id="settings">⚙️ Settings</h2>
+<p>All settings persist in <code>localStorage</code> under key <code>salat2</code>.</p>
+<table>
+  <tr><th>Setting</th><th>Options</th></tr>
+  <tr><td>Theme</td><td>Najm / Andalusia / Khat</td></tr>
+  <tr><td>Mode</td><td>Standard / Kids</td></tr>
+  <tr><td>Language</td><td>EN / FR / AR</td></tr>
+  <tr><td>Engine</td><td>PrayTimes / Adhan / Both</td></tr>
+  <tr><td>Method</td><td>France / MWL / ISNA / Egypt / Makkah / Karachi / Tehran / Jafari / Custom</td></tr>
+  <tr><td>Asr School</td><td>Shafi'i-Maliki / Hanafi</td></tr>
+  <tr><td>Format</td><td>24h / 12h AM/PM</td></tr>
+  <tr><td>Offsets</td><td>±30 min per prayer</td></tr>
+  <tr><td>Mawaqit</td><td>Mosque slug for direct link</td></tr>
+</table>
+
+<h2 id="ble">📡 BLE Protocol</h2>
+<p>Communication via Nordic UART Service (NUS) over Bluetooth Low Energy.</p>
+
+<h3>App → micro:bit</h3>
+<table>
+  <tr><th>Command</th><th>Example</th><th>Description</th></tr>
+  <tr><td><code>HELLO</code></td><td><code>HELLO</code></td><td>Handshake after connect</td></tr>
+  <tr><td><code>TIMES:</code></td><td><code>TIMES:F06:43|S07:53|D13:03|A15:45|M18:15|I19:24|N=A|T=84</code></td><td>Full prayer time sync</td></tr>
+  <tr><td><code>ALERT:</code></td><td><code>ALERT:A</code></td><td>Prayer time reached — trigger adhan</td></tr>
+</table>
+
+<p><strong>Prayer codes:</strong> F=Fajr, S=Sunrise, D=Dhuhr, A=Asr, M=Maghrib, I=Isha</p>
+
+<h3>micro:bit → App</h3>
+<table>
+  <tr><th>Response</th><th>Description</th></tr>
+  <tr><td><code>READY</code></td><td>Firmware acknowledged HELLO</td></tr>
+  <tr><td><code>BTN:A</code></td><td>Button A pressed</td></tr>
+  <tr><td><code>BTN:B</code></td><td>Button B pressed</td></tr>
+  <tr><td><code>TOUCH</code></td><td>Logo touched</td></tr>
+</table>
+
+<div class="card">
+  <h3 style="margin-top:0">Technical Details</h3>
+  <table>
+    <tr><td>Service UUID</td><td><code>6e400001-b5a3-f393-e0a9-e50e24dcca9e</code></td></tr>
+    <tr><td>Write (RX)</td><td><code>6e400002-...</code></td></tr>
+    <tr><td>Notify (TX)</td><td><code>6e400003-...</code></td></tr>
+    <tr><td>MTU</td><td>20 bytes with sequential write queue</td></tr>
+    <tr><td>Reconnect</td><td>3 attempts, 2s delay</td></tr>
+    <tr><td>Sync interval</td><td>60 seconds</td></tr>
+  </table>
+</div>
+
+<h2 id="lantern">🏮 Adhan Lantern States</h2>
+<table>
+  <tr><th>State</th><th>LEDs</th><th>Speaker</th><th>Trigger</th></tr>
+  <tr><td>Idle</td><td>Center pixel breathing</td><td>Silent</td><td>Between prayers</td></tr>
+  <tr><td>Warning</td><td>Expanding ring waves</td><td>Soft tick every ~10s</td><td>T &lt; 5 minutes</td></tr>
+  <tr><td>Adhan</td><td>Islamic star burst ×3</td><td>Adhan melody (D-F-G-A-B♭)</td><td>ALERT: from app</td></tr>
+  <tr><td>Post-adhan</td><td>Warm full glow</td><td>3 iqama beeps</td><td>After melody ends</td></tr>
+  <tr><td>Night</td><td>Faint single LED pulse</td><td>Silent</td><td>Isha → Fajr</td></tr>
+</table>
+
+<h3>Button Interactions</h3>
+<table>
+  <tr><th>Input</th><th>Action</th></tr>
+  <tr><td><strong>Button A</strong></td><td>Scroll next prayer name + time</td></tr>
+  <tr><td><strong>Button B</strong></td><td>Show minutes remaining</td></tr>
+  <tr><td><strong>Touch Logo</strong></td><td>Cycle through all 6 prayer times</td></tr>
+</table>
+
+<h2 id="hardening">🛡️ Hardening</h2>
+<div class="grid">
+  <div class="feature">
+    <div class="feature-title">Graceful Degradation</div>
+    <div class="feature-desc">Map init wrapped in try/catch. App works fully without Leaflet, without GPS, without BLE.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">API Failover</div>
+    <div class="feature-desc">Overpass mirror fallback. response.ok checks on all fetches. Debounced mosque loading.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">XSS Protection</div>
+    <div class="feature-desc">HTML sanitizer esc() on all mosque names from Overpass before DOM insertion.</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">BLE Stability</div>
+    <div class="feature-desc">Sequential write queue prevents GATT collisions. Auto-reconnect. Queue cleared on disconnect.</div>
+  </div>
+</div>
+
+<h2 id="tech">🔧 Built With</h2>
+<table>
+  <tr><th>Library</th><th>Version</th><th>Purpose</th></tr>
+  <tr><td><a href="https://praytimes.org">PrayTimes.js</a></td><td>2.3</td><td>Prayer time computation</td></tr>
+  <tr><td><a href="https://github.com/batoulapps/adhan-js">Adhan.js</a></td><td>4.4.3</td><td>Alternative prayer engine</td></tr>
+  <tr><td><a href="https://leafletjs.com">Leaflet</a></td><td>1.9.4</td><td>Interactive map</td></tr>
+  <tr><td><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API">Web Bluetooth</a></td><td>—</td><td>BLE UART to micro:bit</td></tr>
+  <tr><td><a href="https://makecode.microbit.org">MakeCode</a></td><td>—</td><td>micro:bit firmware</td></tr>
+</table>
+
+<hr>
+
+<div class="footer-doc">
+  <strong>Workshop DIY</strong><br>
+  <a href="https://github.com/abourdim">github.com/abourdim</a><br>
+  <br>MIT License
+</div>
+
+</body>
+</html>

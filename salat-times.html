@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="najm" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Salat Times</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="plug-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070b18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src * data: blob:; connect-src *">
+<meta name="description" content="Accurate Islamic prayer times with mosque sync, Qibla, and nearby mosques">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;overflow-x:hidden;transition:background .6s,color .5s}
+[dir="rtl"]{font-family:'Noto Naskh Arabic','Amiri','Traditional Arabic','Tahoma',sans-serif;direction:rtl}
+[dir="rtl"] .settings-panel{left:auto;right:0;transform:translateX(100%)}
+[dir="rtl"] .settings-panel.open{transform:translateX(0)}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+input,select{font-family:inherit}
+a{text-decoration:none}
+
+/* =============================================================
+   THEME: NAJM — Celestial Night Sky
+   Deep midnight with silver-blue stars, soft glows
+   ============================================================= */
+[data-theme="najm"]{
+  --bg:#070b18;--bg2:#0c1225;--surface:#111a32;--surface2:#182342;--surface3:#1f2d52;
+  --border:#253562;--border-active:#7eb8da;
+  --accent:#7eb8da;--accent2:#a0d0f0;--accent-dim:#3a6a8a;--accent-glow:rgba(126,184,218,.15);
+  --text:#e8ecf4;--text2:#8ea0be;--text3:#4a5e78;
+  --card-bg:rgba(17,26,50,.85);--active-card:rgba(23,40,72,.9);--active-border:#7eb8da;
+  --body-bg:#070b18;--kids-fun:#ffd166;
+  --pattern-color:rgba(126,184,218,.04);--overlay-bg:rgba(7,11,24,.85);
+  --input-bg:#0f1830;
+}
+
+/* =============================================================
+   THEME: ANDALUSIA — Emerald & Gold Moorish Zellige
+   Rich greens with warm gold, Alhambra-inspired
+   ============================================================= */
+[data-theme="andalusia"]{
+  --bg:#021008;--bg2:#061a0c;--surface:#0e2818;--surface2:#163420;--surface3:#1e4228;
+  --border:#2a6038;--border-active:#d4aa40;
+  --accent:#d4aa40;--accent2:#e8c46e;--accent-dim:#8a6d2b;--accent-glow:rgba(212,170,64,.12);
+  --text:#e4f0e6;--text2:#7aaa82;--text3:#3a6a42;
+  --card-bg:rgba(14,40,24,.85);--active-card:rgba(26,56,34,.9);--active-border:#d4aa40;
+  --body-bg:#021008;--kids-fun:#ff8a65;
+  --pattern-color:rgba(212,170,64,.04);--overlay-bg:rgba(2,16,8,.88);
+  --input-bg:#0a1e10;
+}
+
+/* =============================================================
+   THEME: KHAT — Calligraphy Parchment Manuscript
+   Warm parchment with deep brown ink, handwritten feel
+   ============================================================= */
+[data-theme="khat"]{
+  --bg:#f5ead0;--bg2:#eee3c5;--surface:#fff8e6;--surface2:#f5ecce;--surface3:#ebe0c0;
+  --border:#d0c4a0;--border-active:#6b4226;
+  --accent:#6b4226;--accent2:#8a5a3a;--accent-dim:#a07850;--accent-glow:rgba(107,66,38,.1);
+  --text:#1a0e04;--text2:#5a4a38;--text3:#8a7a68;
+  --card-bg:rgba(255,248,230,.9);--active-card:rgba(245,230,185,.95);--active-border:#6b4226;
+  --body-bg:#f5ead0;--kids-fun:#c23030;
+  --pattern-color:rgba(107,66,38,.04);--overlay-bg:rgba(244,234,210,.92);
+  --input-bg:#f8f0d8;
+}
+
+body{background:var(--body-bg);color:var(--text)}
+
+/* =============================================================
+   ISLAMIC ART PATTERNS — Distinct per theme
+   ============================================================= */
+.pattern-overlay{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* NAJM: 8-pointed star lattice + cosmic dust */
+[data-theme="najm"] .pattern-overlay{
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(126,184,218,.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(100,140,200,.03) 0%, transparent 40%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='rgba(126,184,218,.05)' stroke-width='.6'%3E%3Cpath d='M40 8L46 20H54L48 28L52 40L40 34L28 40L32 28L26 20H34Z'/%3E%3Cpath d='M40 0V80M0 40H80'/%3E%3Ccircle cx='40' cy='40' r='18'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ANDALUSIA: interlocking zellige octagon+cross tile */
+[data-theme="andalusia"] .pattern-overlay{
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(212,170,64,.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 85%, rgba(42,96,56,.06) 0%, transparent 45%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='rgba(212,170,64,.07)' stroke-width='.7'%3E%3Crect x='14' y='14' width='36' height='36' rx='1' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='12'/%3E%3Cpath d='M32 0V64M0 32H64'/%3E%3Cpath d='M0 0L64 64M64 0L0 64' stroke-width='.3'/%3E%3Crect x='22' y='22' width='20' height='20' rx='1' transform='rotate(45 32 32)' stroke='rgba(42,150,60,.04)'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* KHAT: arabesque vine + diamond calligraphic ornament + paper texture */
+[data-theme="khat"] .pattern-overlay{
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='rgba(107,66,38,.055)' stroke-width='.8'%3E%3Cpath d='M60 10C72 22 78 22 90 10C78 22 78 38 90 50C78 38 62 38 60 50C58 38 42 38 30 50C42 38 42 22 30 10C42 22 48 22 60 10Z'/%3E%3Cpath d='M60 70C72 82 78 82 90 70C78 82 78 98 90 110C78 98 62 98 60 110C58 98 42 98 30 110C42 98 42 82 30 70C42 82 48 82 60 70Z'/%3E%3Ccircle cx='0' cy='60' r='8' stroke='rgba(107,66,38,.04)'/%3E%3Ccircle cx='120' cy='60' r='8' stroke='rgba(107,66,38,.04)'/%3E%3Ccircle cx='60' cy='60' r='3' fill='rgba(107,66,38,.04)' stroke='none'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.018'/%3E%3C/svg%3E");
+}
+
+/* ===== STARS (Najm only) ===== */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;display:none}
+[data-theme="najm"] .stars{display:block}
+.star{position:absolute;background:#c8ddf0;border-radius:50%;animation:twinkle var(--dur,4s) ease-in-out infinite var(--delay,0s)}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(.8)}50%{opacity:.8;transform:scale(1.2)}}
+
+/* ===== THEME ACCENT BORDERS ===== */
+.theme-topbar{height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin-bottom:4px;border-radius:0 0 4px 4px}
+[data-theme="andalusia"] .theme-topbar{background:linear-gradient(90deg,transparent,var(--accent),#2a6038,var(--accent),transparent)}
+
+/* ===== DECORATIVE ELEMENTS ===== */
+.deco-andalusia{display:none;text-align:center;margin:-6px 0 10px;opacity:.18;font-size:1.6rem;color:var(--accent);letter-spacing:12px}
+[data-theme="andalusia"] .deco-andalusia{display:block}
+.deco-khat{display:none;text-align:center;margin:-2px 0 14px;font-family:'Amiri',serif;font-size:1.3rem;color:var(--accent);opacity:.22}
+[data-theme="khat"] .deco-khat{display:block}
+.deco-najm{display:none;text-align:center;margin:-6px 0 8px;font-size:.7rem;color:var(--accent);opacity:.2;letter-spacing:6px}
+[data-theme="najm"] .deco-najm{display:block}
+
+/* ===== LAYOUT ===== */
+.app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:16px 14px;min-height:100vh}
+
+/* ===== BISMILLAH ===== */
+.bism{text-align:center;font-family:'Amiri','Noto Naskh Arabic',serif;font-size:1.1rem;
+  color:var(--text3);opacity:.35;letter-spacing:1px;padding:6px 0 2px;user-select:none}
+
+/* ===== HEADER ===== */
+.header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;
+  border-bottom:1px solid var(--border);margin-bottom:12px}
+.header-left{flex:1;min-width:0}
+.app-title{font-family:'Amiri',serif;font-size:1.5rem;font-weight:700;color:var(--accent);line-height:1.2}
+[dir="rtl"] .app-title{font-family:'Noto Naskh Arabic','Amiri',serif}
+.header-sub{display:flex;gap:12px;align-items:center;margin-top:4px;flex-wrap:wrap}
+.header-date{font-size:.72rem;color:var(--text2)}
+.header-hijri{font-size:.68rem;color:var(--accent-dim);font-family:'Amiri',serif}
+.header-location{font-size:.72rem;color:var(--text3)}
+.header-right{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.icon-btn{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:1rem;transition:all .2s}
+.icon-btn:hover{background:var(--surface3);color:var(--accent);border-color:var(--accent)}
+.lang-flags{display:flex;gap:3px}
+.lang-flag{width:34px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;background:var(--surface2);border:1px solid var(--border);transition:all .2s;opacity:.5;cursor:pointer}
+.lang-flag svg{border-radius:3px;display:block}
+.lang-flag:hover{opacity:.8;border-color:var(--accent)}
+.lang-flag.active{opacity:1;border-color:var(--accent);background:var(--surface3);box-shadow:0 0 8px var(--accent-glow)}
+
+/* ===== COUNTDOWN ===== */
+.countdown-section{text-align:center;padding:20px 0 16px}
+.countdown-icon{font-size:2rem;margin-bottom:4px;display:block}
+.countdown-label{font-size:.75rem;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:1px}
+.countdown-prayer{font-family:'Amiri',serif;font-size:1.4rem;color:var(--accent);margin-bottom:2px}
+[dir="rtl"] .countdown-prayer{font-family:'Noto Naskh Arabic',serif}
+.countdown-time{font-family:'JetBrains Mono','SF Mono','Consolas','Liberation Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--text);
+  letter-spacing:3px}
+[data-mode="kids"] .countdown-time{font-size:3.2rem}
+[data-mode="kids"] .countdown-icon{font-size:2.6rem}
+
+/* ===== KIDS PROGRESS ===== */
+.kids-progress{display:none;text-align:center;margin:0 0 14px;padding:12px 14px;background:var(--card-bg);
+  border-radius:16px;border:1px solid var(--border);backdrop-filter:blur(4px)}
+[data-mode="kids"] .kids-progress{display:block}
+.kids-stars{font-size:1.5rem;letter-spacing:6px;margin-bottom:4px}
+.kids-msg{font-size:.88rem;color:var(--accent);font-weight:500}
+
+/* ===== PRAYER CARDS ===== */
+.prayer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:420px){.prayer-grid{grid-template-columns:repeat(2,1fr);gap:7px}}
+.prayer-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;
+  padding:14px 10px;text-align:center;transition:all .35s;position:relative;overflow:hidden;backdrop-filter:blur(4px)}
+.prayer-card.active{background:var(--active-card);border-color:var(--active-border);
+  box-shadow:0 0 24px var(--accent-glow),inset 0 0 20px var(--accent-glow)}
+.prayer-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.prayer-card.passed{opacity:.35}
+[data-mode="kids"] .prayer-card{padding:18px 10px;border-radius:18px}
+[data-mode="kids"] .prayer-card.active{transform:scale(1.04)}
+.prayer-icon{font-size:1.6rem;margin-bottom:5px}
+[data-mode="kids"] .prayer-icon{font-size:2.2rem}
+.prayer-name{font-size:.7rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+[data-mode="kids"] .prayer-name{font-size:.85rem;text-transform:none;letter-spacing:0}
+.prayer-time-val{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:1.15rem;font-weight:600;color:var(--text)}
+[data-mode="kids"] .prayer-time-val{font-size:1.35rem}
+.prayer-status{font-size:.62rem;margin-top:5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.prayer-status.done{color:#4ade80}
+.prayer-status.current{color:var(--accent2);animation:statusPulse 2s ease-in-out infinite}
+.prayer-status.upcoming{color:var(--text3)}
+@keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ===== ENGINE COMPARISON ===== */
+.engine-compare{display:none;margin-bottom:16px;padding:14px;background:var(--card-bg);
+  border:1px solid var(--border);border-radius:14px;font-size:.75rem;color:var(--text2);backdrop-filter:blur(4px)}
+.engine-compare.show{display:block}
+.engine-compare h4{color:var(--accent);font-size:.82rem;margin-bottom:10px;font-family:'Amiri',serif}
+.engine-table{width:100%;border-collapse:collapse}
+.engine-table th{text-align:left;padding:5px 6px;color:var(--text3);font-weight:600;font-size:.65rem;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+[dir="rtl"] .engine-table th{text-align:right}
+.engine-table td{padding:5px 6px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:.72rem}
+.engine-table tr:last-child td{border:none}
+.engine-diff{color:var(--kids-fun);font-weight:700}
+.engine-diff.zero{color:var(--text3)}
+
+/* ===== CITY SEARCH ===== */
+.search-box{position:relative;margin-bottom:16px}
+.search-input{width:100%;padding:10px 14px 10px 36px;border-radius:12px;background:var(--input-bg);
+  border:1px solid var(--border);color:var(--text);font-size:.85rem;outline:none;transition:border .2s}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;color:var(--text3);pointer-events:none}
+[dir="rtl"] .search-icon{left:auto;right:12px}
+[dir="rtl"] .search-input{padding:10px 36px 10px 14px}
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 12px 12px;max-height:200px;overflow-y:auto;z-index:50;display:none}
+.search-results.show{display:block}
+.search-item{padding:9px 14px;font-size:.8rem;color:var(--text2);cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
+.search-item:hover{background:var(--surface2);color:var(--text)}
+.search-item:last-child{border:none}
+
+/* ===== BLE ECHO ===== */
+.ble-echo{display:none;margin-bottom:12px;padding:8px 10px;border-radius:10px;background:var(--card-bg);
+  border:1px solid var(--border);max-height:120px;overflow-y:auto;font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;line-height:1.6;color:var(--text3);backdrop-filter:blur(4px)}
+.ble-echo.show{display:block}
+.ble-echo .rx{color:#4ade80}.ble-echo .tx{color:#60a5fa}.ble-echo .err{color:#ef4444}
+
+/* ===== BLE LANTERN ===== */
+.ble-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;
+  margin-bottom:16px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border);
+  color:var(--text2);font-size:.8rem;font-weight:500;transition:all .2s;backdrop-filter:blur(4px)}
+.ble-btn:hover{border-color:#e8a838;color:#e8a838}
+.ble-btn.connected{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,.05)}
+.ble-btn.syncing{border-color:#60a5fa;color:#60a5fa}
+.ble-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;transition:background .3s}
+.ble-btn.connected .ble-dot{background:#4ade80;box-shadow:0 0 6px #4ade80}
+.ble-btn.syncing .ble-dot{background:#60a5fa;animation:blepulse 1s infinite}
+@keyframes blepulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:360px;width:90%}
+.toast{padding:10px 16px;border-radius:10px;font-size:.78rem;font-weight:500;color:#fff;backdrop-filter:blur(8px);
+  pointer-events:all;animation:toastIn .3s ease,toastOut .4s ease 3s forwards;display:flex;align-items:center;gap:8px}
+.toast-success{background:rgba(74,222,128,.9);color:#052e16}
+.toast-error{background:rgba(239,68,68,.9)}
+.toast-info{background:rgba(96,165,250,.85)}
+.toast-warning{background:rgba(232,168,56,.9);color:#1a0e04}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-10px)}}
+
+/* ===== BLE HEADER INDICATOR ===== */
+.ble-header-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;display:none;transition:background .3s}
+.ble-header-dot.on{display:inline-block;background:#4ade80;box-shadow:0 0 6px #4ade80}
+
+/* ===== NOTIFICATION PERMISSION ===== */
+.notif-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;
+  border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text2);
+  font-size:.75rem;font-weight:500;transition:all .2s;margin-top:6px}
+.notif-btn:hover{border-color:var(--accent);color:var(--accent)}
+.notif-btn.granted{border-color:#4ade80;color:#4ade80;opacity:.7;pointer-events:none}
+
+/* ===== PRAYER LOG ===== */
+.prayer-log-bar{display:flex;gap:3px;margin:8px 0 4px;justify-content:center}
+.log-dot{width:14px;height:14px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.5rem;cursor:pointer;transition:all .2s}
+.log-dot.logged{background:#4ade80;border-color:#4ade80;color:#052e16}
+.log-dot:hover{transform:scale(1.2);border-color:var(--accent)}
+.streak-info{font-size:.62rem;color:var(--text3);text-align:center;margin-bottom:10px}
+
+/* ===== LOCATION PRESETS ===== */
+.preset-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.preset-chip{padding:4px 10px;border-radius:20px;font-size:.68rem;background:var(--surface);
+  border:1px solid var(--border);color:var(--text2);transition:all .2s;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preset-chip:hover{border-color:var(--accent);color:var(--accent)}
+.preset-chip.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.preset-add{padding:4px 10px;border-radius:20px;font-size:.68rem;background:var(--surface2);
+  border:1px dashed var(--border);color:var(--text3);transition:all .2s}
+.preset-add:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ===== HIJRI EVENTS ===== */
+.hijri-event{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:600;
+  background:rgba(232,168,56,.15);color:var(--accent2);border:1px solid rgba(232,168,56,.2);margin-top:4px}
+
+/* ===== SETTINGS EXPORT/IMPORT ===== */
+.export-row{display:flex;gap:6px;margin-top:6px}
+.export-btn{flex:1;padding:6px;border-radius:8px;font-size:.72rem;background:var(--surface);
+  border:1px solid var(--border);color:var(--text2);text-align:center;transition:all .2s}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ===== IQAMA DELAY ===== */
+.iqama-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.iqama-row{display:flex;align-items:center;gap:4px;padding:5px 6px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+.iqama-val{width:40px;padding:3px 4px;border-radius:5px;background:var(--input-bg);border:1px solid var(--border);
+  color:var(--accent);font-size:.75rem;font-weight:700;text-align:center;font-family:'JetBrains Mono',monospace}
+.iqama-val:focus{border-color:var(--accent);outline:none}
+
+/* ===== WILL-CHANGE HINTS ===== */
+.countdown-time{will-change:contents}
+.star{will-change:opacity,transform}
+.prayer-card.active{will-change:box-shadow}
+
+/* ===== OFFSET FLASH ===== */
+.offset-val.flash{animation:offsetFlash .4s ease}
+@keyframes offsetFlash{0%{box-shadow:0 0 0 2px var(--accent)}100%{box-shadow:none}}
+
+/* ===== MAP TOGGLE ===== */
+.map-toggle-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;
+  margin-bottom:16px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border);
+  color:var(--text2);font-size:.8rem;font-weight:500;transition:all .2s;backdrop-filter:blur(4px)}
+.map-toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
+.map-toggle-btn.on{background:var(--surface2);border-color:var(--accent);color:var(--accent)}
+
+/* ===== MAP ===== */
+.map-section{margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+.map-container{height:220px;width:100%;z-index:1}
+.qibla-info{font-size:.72rem;color:var(--accent);padding:7px 12px;background:var(--card-bg);
+  border-top:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.map-controls{display:flex;gap:5px;padding:7px 8px;background:var(--card-bg);border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.map-btn{padding:5px 11px;border-radius:8px;font-size:.72rem;font-weight:500;background:var(--surface2);
+  color:var(--text2);border:1px solid var(--border);transition:all .2s}
+.map-btn:hover,.map-btn.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.mosque-count{font-size:.68rem;color:var(--text3);margin-left:auto}
+[dir="rtl"] .mosque-count{margin-left:0;margin-right:auto}
+
+/* ===== NEARBY MOSQUES LIST ===== */
+.mosques-list{margin-bottom:16px;display:none}
+.mosques-list.show{display:block}
+.mosques-list-title{font-size:.92rem;color:var(--accent);margin-bottom:8px;font-family:'Amiri',serif;font-weight:700}
+.mosque-item{display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--card-bg);
+  border:1px solid var(--border);border-radius:12px;margin-bottom:5px;transition:all .2s;cursor:pointer;backdrop-filter:blur(2px)}
+.mosque-item:hover{border-color:var(--accent);background:var(--surface2)}
+.mosque-emoji{font-size:1.2rem;flex-shrink:0}
+.mosque-info{flex:1;min-width:0}
+.mosque-name{font-size:.8rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mosque-dist{font-size:.68rem;color:var(--text3)}
+.mosque-walk{font-size:.68rem;color:var(--accent-dim);background:var(--surface3);padding:2px 8px;border-radius:6px;flex-shrink:0;white-space:nowrap}
+
+/* ===== SETTINGS PANEL ===== */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(3px)}
+.settings-overlay.open{opacity:1;pointer-events:all}
+.settings-panel{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:82vw;background:var(--bg2);
+  border-right:1px solid var(--border);z-index:101;transform:translateX(-100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:18px 16px}
+[dir="rtl"] .settings-panel{border-right:none;border-left:1px solid var(--border)}
+.settings-panel.open{transform:translateX(0)}
+.settings-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;
+  padding-bottom:14px;border-bottom:1px solid var(--border)}
+.settings-title{font-family:'Amiri',serif;font-size:1.15rem;color:var(--accent)}
+.close-btn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);color:var(--text2);font-size:.9rem;border:1px solid var(--border);transition:all .2s}
+.close-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sg{margin-bottom:18px}
+.sg-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:6px;font-weight:700}
+.sg-opts{display:flex;flex-wrap:wrap;gap:5px}
+.sg-btn{padding:6px 12px;border-radius:8px;font-size:.78rem;background:var(--surface);color:var(--text2);
+  border:1px solid var(--border);transition:all .2s;font-weight:500}
+.sg-btn:hover{border-color:var(--accent);color:var(--text)}
+.sg-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:700}
+.sg-select{width:100%;padding:8px 10px;border-radius:8px;background:var(--input-bg);color:var(--text);
+  border:1px solid var(--border);font-size:.82rem;outline:none}
+.sg-select:focus{border-color:var(--accent)}
+.sg-select option{background:var(--bg2);color:var(--text)}
+.sg-row{display:flex;gap:6px;margin-top:6px}
+.sg-input{flex:1;padding:7px 10px;border-radius:8px;background:var(--input-bg);color:var(--text);
+  border:1px solid var(--border);font-size:.82rem;outline:none}
+.sg-input:focus{border-color:var(--accent)}
+.custom-angles{display:none;margin-top:8px}
+.custom-angles.show{display:block}
+.apply-btn{padding:6px 14px;border-radius:8px;font-size:.78rem;background:var(--accent);color:var(--bg);
+  border:1px solid var(--accent);font-weight:600;margin-top:6px;transition:opacity .2s}
+.apply-btn:hover{opacity:.85}
+
+/* ===== FOOTER ===== */
+.footer{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;
+  padding:18px 0 24px;font-size:.65rem;color:var(--text3);border-top:1px solid var(--border);margin-top:8px}
+.footer a{color:var(--accent-dim)}
+.footer-logo-link{display:inline-flex;align-items:center}
+.footer-logo-img{height:32px;opacity:.35;transition:opacity .3s;filter:brightness(0) invert(1);vertical-align:middle;margin-right:4px}
+.footer-logo-img:hover{opacity:.55}
+[data-theme="khat"] .footer-logo-img{filter:brightness(.3)}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.prayer-card{animation:fadeUp .45s ease both}
+.prayer-card:nth-child(1){animation-delay:.04s}.prayer-card:nth-child(2){animation-delay:.08s}
+.prayer-card:nth-child(3){animation-delay:.12s}.prayer-card:nth-child(4){animation-delay:.16s}
+.prayer-card:nth-child(5){animation-delay:.2s}.prayer-card:nth-child(6){animation-delay:.24s}
+@keyframes activePulse{0%,100%{box-shadow:0 0 20px var(--accent-glow)}50%{box-shadow:0 0 40px var(--accent-glow),0 0 70px rgba(126,184,218,.04)}}
+.prayer-card.active{animation:activePulse 4s ease-in-out infinite}
+
+/* ===== LOADING SPINNER ===== */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--text3);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== LEAFLET FIX ===== */
+.leaflet-control-attribution{font-size:.55rem!important;opacity:.4}
+.leaflet-container{background:var(--bg)!important}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:360px){.app{padding:12px 10px}.countdown-time{font-size:2.2rem}}
+
+/* ===== OFFSET CONTROLS ===== */
+.offset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.offset-row{display:flex;align-items:center;gap:4px;padding:5px 6px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+.offset-name{font-size:.68rem;color:var(--text2);flex:1;font-weight:500}
+.offset-val{width:48px;padding:3px 4px;border-radius:5px;background:var(--input-bg);border:1px solid var(--border);
+  color:var(--accent);font-size:.75rem;font-weight:700;text-align:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.offset-val:focus{border-color:var(--accent);outline:none}
+.offset-unit{font-size:.6rem;color:var(--text3)}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastBox"></div>
+<div class="stars" id="stars"></div>
+<div class="pattern-overlay"></div>
+
+<div class="app" id="app">
+  <div class="theme-topbar"></div>
+
+  <!-- BISMILLAH -->
+  <div class="bism">﷽</div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="app-title" id="appTitle">☪ Salat Times</div>
+      <div class="header-sub">
+        <span class="header-date" id="dateGreg"></span>
+        <span class="header-hijri" id="dateHijri"></span>
+      </div>
+      <div class="hijri-event" id="hijriEvent" style="display:none"></div>
+      <div class="header-location" id="headerLoc">📍 <span id="locName">...</span></div>
+    </div>
+    <div class="header-right">
+      <div class="lang-flags" id="langFlags">
+        <button class="lang-flag" data-lang="en" onclick="setLang('en')" title="English"><svg viewBox="0 0 60 30" width="24" height="12"><rect width="60" height="30" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30" stroke="#C8102E" stroke-width="2"/><path d="M60,0L0,30" stroke="#C8102E" stroke-width="2"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg></button>
+        <button class="lang-flag" data-lang="fr" onclick="setLang('fr')" title="Français"><svg viewBox="0 0 3 2" width="24" height="16"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg></button>
+        <button class="lang-flag" data-lang="ar" onclick="setLang('ar')" title="العربية"><svg viewBox="0 0 30 20" width="24" height="16"><rect width="15" height="20" fill="#006233"/><rect x="15" width="15" height="20" fill="#fff"/><circle cx="16" cy="10" r="5" fill="#D21034"/><circle cx="17.2" cy="10" r="4" fill="#006233"/><polygon points="17,6 17.8,8.5 15.2,7 18.8,7 16.2,8.5" fill="#D21034" transform="translate(0.5,0)"/></svg></button>
+      </div>
+      <span class="ble-header-dot" id="bleHeaderDot" title="Lantern"></span>
+      <button class="icon-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown-section">
+    <span class="countdown-icon" id="cdIcon">🌙</span>
+    <div class="countdown-label" id="cdLabel">Next prayer</div>
+    <div class="countdown-prayer" id="cdPrayer">--</div>
+    <div class="countdown-time" id="cdTime">--:--:--</div>
+  </div>
+
+  <!-- KIDS -->
+  <div class="kids-progress" id="kidsBox">
+    <div class="kids-stars" id="kidsStars">☆☆☆☆☆</div>
+    <div class="kids-msg" id="kidsMsg"></div>
+  </div>
+
+  <!-- PRAYER LOG -->
+  <div id="prayerLogSection">
+    <div class="prayer-log-bar" id="prayerLogBar"></div>
+    <div class="streak-info" id="streakInfo"></div>
+  </div>
+
+  <!-- PRAYER CARDS -->
+  <div class="prayer-grid" id="prayerGrid"></div>
+
+  <!-- ENGINE COMPARISON -->
+  <div class="engine-compare" id="engineCmp">
+    <h4 id="ecTitle">⚖️ Engine Comparison</h4>
+    <table class="engine-table"><thead><tr>
+      <th id="ecH1">Prayer</th><th>PrayTimes</th><th>Adhan</th><th>Δ</th>
+    </tr></thead><tbody id="ecBody"></tbody></table>
+  </div>
+
+  <!-- BLE LANTERN -->
+  <button class="ble-btn" id="bleBtn" onclick="bleToggle()">
+    <span class="ble-dot" id="bleDot"></span>
+    <span>🏮</span>
+    <span data-i18n="lanternConnect" id="bleBtnLabel">Connect Lantern</span>
+  </button>
+  <div class="ble-echo" id="bleEcho"></div>
+
+  <!-- CITY SEARCH -->
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- MAP TOGGLE -->
+  <button class="map-toggle-btn" id="mapToggle" onclick="toggleMap()">🗺️ <span data-i18n="showMap">Show map</span></button>
+
+  <!-- MAP (hidden by default) -->
+  <div class="map-section" id="mapSection" style="display:none">
+    <div class="map-container" id="map"></div>
+    <div class="qibla-info">🧭 <span id="qiblaText">--</span></div>
+    <div class="map-controls">
+      <button class="map-btn" id="btnLocate" onclick="doLocate()">📍 <span data-i18n="locate">Locate me</span></button>
+      <button class="map-btn" id="btnMosques" onclick="doMosques()">🕌 <span data-i18n="mosques">Mosques</span></button>
+      <button class="map-btn" id="btnQibla" onclick="doQibla()">🧭 <span data-i18n="qibla">Qibla</span></button>
+      <span class="mosque-count" id="mosqueCount"></span>
+    </div>
+  </div>
+
+  <!-- NEARBY MOSQUES -->
+  <div class="mosques-list" id="mosquesList">
+    <div class="mosques-list-title" id="mosquesTitle">🕌 Nearby Mosques</div>
+    <div id="mosquesItems"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <a href="https://github.com/abourdim" target="_blank" title="Workshop DIY" class="footer-logo-link">
+      <img src="data:image/png;base64,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" alt="Workshop DIY" class="footer-logo-img">
+    </a>
+    <span data-i18n="powered">Powered by</span>
+    <a href="https://praytimes.org" target="_blank">PrayTimes.js</a> ·
+    <a href="https://github.com/batoulapps/adhan-js" target="_blank">Adhan.js</a> ·
+    <a href="https://leafletjs.com" target="_blank">Leaflet</a>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings-overlay" id="sOverlay" onclick="toggleSettings()"></div>
+<div class="settings-panel" id="sPanel">
+  <div class="settings-header">
+    <div class="settings-title" id="sTitle">⚙️ Settings</div>
+    <button class="close-btn" onclick="toggleSettings()">✕</button>
+  </div>
+
+  <div class="sg"><div class="sg-label" data-i18n="theme">Theme</div><div class="sg-opts" id="oTheme">
+    <button class="sg-btn" data-k="theme" data-v="najm" onclick="so(this)">🌙 Najm</button>
+    <button class="sg-btn" data-k="theme" data-v="andalusia" onclick="so(this)">🕌 Andalusia</button>
+    <button class="sg-btn" data-k="theme" data-v="khat" onclick="so(this)">📜 Khat</button>
+  </div></div>
+
+  <div class="sg"><div class="sg-label" data-i18n="mode">Mode</div><div class="sg-opts">
+    <button class="sg-btn" data-k="mode" data-v="standard" onclick="so(this)">📐 Standard</button>
+    <button class="sg-btn" data-k="mode" data-v="kids" onclick="so(this)">👶 Kids</button>
+  </div></div>
+
+  <div class="sg"><div class="sg-label" data-i18n="engine">Engine</div><div class="sg-opts">
+    <button class="sg-btn" data-k="engine" data-v="praytimes" onclick="so(this)">PrayTimes</button>
+    <button class="sg-btn" data-k="engine" data-v="adhan" onclick="so(this)">Adhan</button>
+    <button class="sg-btn" data-k="engine" data-v="both" onclick="so(this)">⚖️ Both</button>
+  </div></div>
+
+  <div class="sg"><div class="sg-label" data-i18n="method">Method</div>
+    <select class="sg-select" id="selMethod" onchange="S.method=this.value;document.getElementById('custAng').classList.toggle('show',this.value==='Custom');_cachedUse=null;save();render()">
+      <option value="France">🇫🇷 France / UOIF (12°/12°)</option>
+      <option value="MWL">🌍 Muslim World League (18°/17°)</option>
+      <option value="ISNA">🇺🇸 ISNA (15°/15°)</option>
+      <option value="Egypt">🇪🇬 Egypt (19.5°/17.5°)</option>
+      <option value="Makkah">🕋 Umm al-Qura (18.5° / 90min)</option>
+      <option value="Karachi">🇵🇰 Karachi (18°/18°)</option>
+      <option value="Tehran">🇮🇷 Tehran (17.7°/14°)</option>
+      <option value="Jafari">Jafari (16°/14°)</option>
+      <option value="Custom">✏️ Custom angles</option>
+    </select>
+    <div class="custom-angles" id="custAng">
+      <div class="sg-row">
+        <input class="sg-input" id="cFajr" type="number" step="0.1" placeholder="Fajr °" value="12">
+        <input class="sg-input" id="cIsha" type="number" step="0.1" placeholder="Isha °" value="12">
+      </div>
+      <button class="apply-btn" onclick="applyCustomAngles()">Apply</button>
+    </div>
+  </div>
+
+  <div class="sg"><div class="sg-label" data-i18n="asrSchool">Asr School</div><div class="sg-opts">
+    <button class="sg-btn" data-k="asr" data-v="Standard" onclick="so(this)">Shafi'i / Maliki</button>
+    <button class="sg-btn" data-k="asr" data-v="Hanafi" onclick="so(this)">Hanafi</button>
+  </div></div>
+
+  <div class="sg"><div class="sg-label" data-i18n="timeFmt">Time Format</div><div class="sg-opts">
+    <button class="sg-btn" data-k="fmt" data-v="24h" onclick="so(this)">24h</button>
+    <button class="sg-btn" data-k="fmt" data-v="12h" onclick="so(this)">12h AM/PM</button>
+  </div></div>
+
+  <div class="sg" style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+    <div class="sg-label">🕌 <span data-i18n="mosqueSync">Mosque Sync (offsets)</span></div>
+    <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px" data-i18n="offsetHint">Adjust ± minutes per prayer to match your mosque</div>
+    <div class="offset-grid" id="offsetGrid"></div>
+    <button class="apply-btn" style="width:100%;margin-top:8px" onclick="resetOffsets()">↺ <span data-i18n="resetOffsets">Reset all to 0</span></button>
+  </div>
+
+  <div class="sg">
+    <div class="sg-label">🔗 <span data-i18n="mawaqitLink">Mawaqit Link</span></div>
+    <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px" data-i18n="mawaqitHint">Enter your mosque's Mawaqit slug to open it</div>
+    <div class="sg-row">
+      <input class="sg-input" id="mawaqitSlug" type="text" placeholder="mosquee-de-chelles-chelles-77500-france" style="font-size:.72rem">
+      <button class="apply-btn" onclick="openMawaqit()" style="margin-top:0;white-space:nowrap">↗ Open</button>
+    </div>
+  </div>
+
+
+  <div class="sg" style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
+    <div class="sg-label">🔔 <span data-i18n="notifications">Notifications</span></div>
+    <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
+      🔔 <span data-i18n="enableNotif" id="notifLabel">Enable prayer notifications</span>
+    </button>
+  </div>
+
+  <div class="sg">
+    <div class="sg-label">⏱️ <span data-i18n="iqamaDelays">Iqama Delays (minutes)</span></div>
+    <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px" data-i18n="iqamaHint">Minutes between adhan and iqama</div>
+    <div class="iqama-grid" id="iqamaGrid"></div>
+  </div>
+
+  <div class="sg">
+    <div class="sg-label">📍 <span data-i18n="savedLocations">Saved Locations</span></div>
+    <div class="preset-chips" id="presetChips"></div>
+  </div>
+
+  <div class="sg">
+    <div class="sg-label">🏮 <span data-i18n="lanternTest">Lantern Test</span></div>
+    <button class="apply-btn" style="width:100%" onclick="bleTestAlert()">🏮 <span data-i18n="testAlert">Send test alert</span></button>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+      <input type="checkbox" id="echoToggle" onchange="S.showEcho=this.checked;save();toggleEchoDiv()" style="accent-color:var(--accent)">
+      <label for="echoToggle" style="font-size:.72rem;color:var(--text2);cursor:pointer" data-i18n="showBleLog">Show BLE log</label>
+    </div>
+  </div>
+
+  <div class="sg">
+    <div class="sg-label">💾 <span data-i18n="dataManagement">Data Management</span></div>
+    <div class="export-row">
+      <button class="export-btn" onclick="exportSettings()">📤 <span data-i18n="exportBtn">Export</span></button>
+      <button class="export-btn" onclick="importSettings()">📥 <span data-i18n="importBtn">Import</span></button>
+    </div>
+  </div>
+
+  <div class="sg" style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
+    <button class="apply-btn" style="width:100%;background:var(--surface2);color:var(--text2);border-color:var(--border)" onclick="clearAppCache()">
+      🗑️ <span data-i18n="clearCache">Clear cache & reload</span>
+    </button>
+    <div style="font-size:.6rem;color:var(--text3);margin-top:4px;text-align:center" data-i18n="cacheHint">Forces fresh download of all resources</div>
+  </div>
+</div>
+
+<!-- LIBS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/Adhan.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+// PRAYTIMES.JS v2.3 (Hamid Zarrabi-Zadeh, praytimes.org)
+// ═══════════════════════════════════════════════════
+function PrayTimes(method){
+var DM={dtr:function(d){return d*Math.PI/180},rtd:function(r){return r*180/Math.PI},
+sin:function(d){return Math.sin(DM.dtr(d))},cos:function(d){return Math.cos(DM.dtr(d))},
+tan:function(d){return Math.tan(DM.dtr(d))},arcsin:function(d){return DM.rtd(Math.asin(d))},
+arccos:function(d){return DM.rtd(Math.acos(d))},arctan2:function(y,x){return DM.rtd(Math.atan2(y,x))},
+arccot:function(x){return DM.rtd(Math.atan(1/x))},
+fixAngle:function(a){return DM.fix(a,360)},fixHour:function(a){return DM.fix(a,24)},
+fix:function(a,b){a=a-b*Math.floor(a/b);return a<0?a+b:a}};
+var methods={MWL:{params:{fajr:18,isha:17}},ISNA:{params:{fajr:15,isha:15}},
+Egypt:{params:{fajr:19.5,isha:17.5}},Makkah:{params:{fajr:18.5,isha:'90 min'}},
+Karachi:{params:{fajr:18,isha:18}},Tehran:{params:{fajr:17.7,isha:14,maghrib:4.5,midnight:'Jafari'}},
+Jafari:{params:{fajr:16,isha:14,maghrib:4,midnight:'Jafari'}},
+France:{params:{fajr:12,isha:12}}};
+var calcMethod='MWL',setting={imsak:'10 min',dhuhr:'0 min',asr:'Standard',highLats:'NightMiddle'},
+timeFormat='24h',timeSuffixes=['am','pm'],invalidTime='-----',numIterations=1,offset={},
+lat,lng,elv,timeZone,jDate,defParams={maghrib:'0 min',midnight:'Standard'};
+var timeNames=['imsak','fajr','sunrise','dhuhr','asr','sunset','maghrib','isha','midnight'];
+for(var i=0;i<timeNames.length;i++)offset[timeNames[i]]=0;
+init(method);
+function init(m){setMethod(m||calcMethod)}
+function setMethod(m){if(methods[m]){adjP(methods[m].params);calcMethod=m}}
+function adjP(p){for(var id in p)setting[id]=p[id];for(var id in defParams)if(!(id in p))setting[id]=defParams[id]}
+function adjust(p){for(var id in p)setting[id]=p[id]}
+function getTimes(date,coords,tz,dst,fmt){
+lat=+coords[0];lng=+coords[1];elv=coords[2]?+coords[2]:0;
+timeFormat=fmt||timeFormat;
+if(date.constructor===Date)date=[date.getFullYear(),date.getMonth()+1,date.getDate()];
+if(typeof tz=='undefined'||tz==='auto')tz=getTimeZone(date);
+if(typeof dst=='undefined'||dst==='auto')dst=getDst(date);
+timeZone=+tz+(dst?1:0);jDate=julian(date[0],date[1],date[2])-lng/(15*24);
+return computeTimes()}
+function fmtTime(time,fmt,suf){if(isNaN(time))return invalidTime;if(fmt=='Float')return time;
+suf=suf||timeSuffixes;time=DM.fixHour(time+.5/60);var h=Math.floor(time),m=Math.floor((time-h)*60);
+var s=fmt=='12h'?suf[h<12?0:1]:'',hr=fmt=='24h'?tw(h):((h+12-1)%12+1);
+return hr+':'+tw(m)+(s?' '+s:'')}
+function midDay(t){return DM.fixHour(12-sunPos(jDate+t).equation)}
+function sunAngleTime(angle,t,dir){var d=sunPos(jDate+t).declination,n=midDay(t),
+v=1/15*DM.arccos((-DM.sin(angle)-DM.sin(d)*DM.sin(lat))/(DM.cos(d)*DM.cos(lat)));
+return n+(dir=='ccw'?-v:v)}
+function asrTime(f,t){var d=sunPos(jDate+t).declination;return sunAngleTime(-DM.arccot(f+DM.tan(Math.abs(lat-d))),t)}
+function sunPos(jd){var D=jd-2451545,g=DM.fixAngle(357.529+.98560028*D),q=DM.fixAngle(280.459+.98564736*D),
+L=DM.fixAngle(q+1.915*DM.sin(g)+.02*DM.sin(2*g)),e=23.439-.00000036*D,
+RA=DM.arctan2(DM.cos(e)*DM.sin(L),DM.cos(L))/15;
+return{declination:DM.arcsin(DM.sin(e)*DM.sin(L)),equation:q/15-DM.fixHour(RA)}}
+function julian(y,m,d){if(m<=2){y--;m+=12}var A=Math.floor(y/100);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+(2-A+Math.floor(A/4))-1524.5}
+function computePT(t){t=dayP(t);var p=setting;return{
+imsak:sunAngleTime(ev(p.imsak),t.imsak,'ccw'),fajr:sunAngleTime(ev(p.fajr),t.fajr,'ccw'),
+sunrise:sunAngleTime(riseSetAngle(),t.sunrise,'ccw'),dhuhr:midDay(t.dhuhr),
+asr:asrTime(asrF(p.asr),t.asr),sunset:sunAngleTime(riseSetAngle(),t.sunset),
+maghrib:sunAngleTime(ev(p.maghrib),t.maghrib),isha:sunAngleTime(ev(p.isha),t.isha)}}
+function computeTimes(){var t={imsak:5,fajr:5,sunrise:6,dhuhr:12,asr:13,sunset:18,maghrib:18,isha:18};
+for(var i=1;i<=numIterations;i++)t=computePT(t);t=adjTimes(t);
+t.midnight=setting.midnight=='Jafari'?t.sunset+tDiff(t.sunset,t.fajr)/2:t.sunset+tDiff(t.sunset,t.sunrise)/2;
+for(var n in t)t[n]+=offset[n]/60;for(var n in t)t[n]=fmtTime(t[n],timeFormat);return t}
+function adjTimes(t){for(var i in t)t[i]+=timeZone-lng/15;
+if(setting.highLats!='None'){var nt=tDiff(t.sunset,t.sunrise);
+t.imsak=adjHL(t.imsak,t.sunrise,ev(setting.imsak),nt,'ccw');
+t.fajr=adjHL(t.fajr,t.sunrise,ev(setting.fajr),nt,'ccw');
+t.isha=adjHL(t.isha,t.sunset,ev(setting.isha),nt);
+t.maghrib=adjHL(t.maghrib,t.sunset,ev(setting.maghrib),nt)}
+if(isMin(setting.imsak))t.imsak=t.fajr-ev(setting.imsak)/60;
+if(isMin(setting.maghrib))t.maghrib=t.sunset+ev(setting.maghrib)/60;
+if(isMin(setting.isha))t.isha=t.maghrib+ev(setting.isha)/60;
+t.dhuhr+=ev(setting.dhuhr)/60;return t}
+function asrF(p){return{Standard:1,Hanafi:2}[p]||ev(p)}
+function riseSetAngle(){return .833+.0347*Math.sqrt(elv)}
+function adjHL(t,b,a,n,d){var p=nPortion(a,n),df=d=='ccw'?tDiff(t,b):tDiff(b,t);
+if(isNaN(t)||df>p)t=b+(d=='ccw'?-p:p);return t}
+function nPortion(a,n){var m=setting.highLats,p=.5;if(m=='AngleBased')p=a/60;if(m=='OneSeventh')p=1/7;return p*n}
+function dayP(t){for(var i in t)t[i]/=24;return t}
+function getTimeZone(d){return Math.min(gmtOff([d[0],0,1]),gmtOff([d[0],6,1]))}
+function getDst(d){return 1*(gmtOff(d)!=getTimeZone(d))}
+function gmtOff(d){var x=new Date(d[0],d[1]-1,d[2],12,0,0),g=new Date(x.toGMTString().replace(/ GMT$/,''));return(x-g)/36e5}
+function ev(s){return 1*((s+'').split(/[^0-9.+-]/)[0])||0}
+function isMin(a){return(a+'').indexOf('min')>-1}
+function tDiff(a,b){return DM.fixHour(b-a)}
+function tw(n){return n<10?'0'+n:n}
+return{adjust,getTimes}}
+
+// ═══════════════════════════════════════════════════
+// APP STATE & I18N
+// ═══════════════════════════════════════════════════
+const PR=['fajr','sunrise','dhuhr','asr','maghrib','isha'];
+const IC={fajr:'🌅',sunrise:'☀️',dhuhr:'🌤️',asr:'⛅',maghrib:'🌇',isha:'🌙'};
+const KA={lat:21.4225,lng:39.8262};
+
+const L18={
+en:{title:'☪ Salat Times',next:'Next prayer',locate:'Locate me',mosques:'Mosques',qibla:'Qibla',
+powered:'Powered by',theme:'Theme',mode:'Mode',engine:'Engine',method:'Method',asrSchool:'Asr School',
+timeFmt:'Format',settings:'⚙️ Settings',search:'Search city… (e.g. Chelles, France)',
+fajr:'Fajr',sunrise:'Sunrise',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha',
+done:'Done ✓',now:'Now',soon:'Upcoming',nearby:'🕌 Nearby Mosques',compare:'⚖️ Engine Comparison',prayer:'Prayer',
+great:'Mashallah! Keep going! 🌟',allDone:'All 5 prayers done today! 🎉',start:'Bismillah! New day ☀️',
+qDir:'Qibla:',walk:'min walk',of:'of',pDone:'prayers done',
+mosqueSync:'Mosque Sync (offsets)',offsetHint:'Adjust ± minutes per prayer to match your mosque',
+resetOffsets:'Reset all to 0',mawaqitLink:'Mawaqit Link',mawaqitHint:'Enter your mosque\'s Mawaqit slug to open it',
+showMap:'Show map',hideMap:'Hide map',clearCache:'Clear cache & reload',cacheHint:'Forces fresh download of all resources',
+lanternConnect:'Connect Lantern',lanternDisconnect:'Disconnect Lantern',lanternSyncing:'Syncing...',
+notifications:'Notifications',enableNotif:'Enable prayer notifications',notifGranted:'Notifications enabled ✓',
+iqamaDelays:'Iqama Delays (min)',iqamaHint:'Minutes between adhan and iqama',
+savedLocations:'Saved Locations',addLocation:'+ Save current',
+lanternTest:'Lantern Test',testAlert:'Send test alert',
+dataManagement:'Data Management',exportBtn:'Export',importBtn:'Import',
+streak:'day streak',prayerLog:'Prayer Log',tapToLog:'Tap after praying',showBleLog:'Show BLE log'},
+fr:{title:'☪ Horaires de Prière',next:'Prochaine prière',locate:'Me localiser',mosques:'Mosquées',qibla:'Qibla',
+powered:'Propulsé par',theme:'Thème',mode:'Mode',engine:'Moteur',method:'Méthode',asrSchool:'École Asr',
+timeFmt:'Format',settings:'⚙️ Paramètres',search:'Chercher une ville… (ex: Chelles, France)',
+fajr:'Fajr',sunrise:'Chourouk',dhuhr:'Dhouhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha',
+done:'Fait ✓',now:'En cours',soon:'À venir',nearby:'🕌 Mosquées proches',compare:'⚖️ Comparaison moteurs',prayer:'Prière',
+great:'Mashallah ! Continue ! 🌟',allDone:'Les 5 prières sont faites ! 🎉',start:'Bismillah ! ☀️',
+qDir:'Qibla :',walk:'min à pied',of:'sur',pDone:'prières faites',
+mosqueSync:'Synchro mosquée (décalages)',offsetHint:'Ajustez ± minutes par prière pour correspondre à votre mosquée',
+resetOffsets:'Tout remettre à 0',mawaqitLink:'Lien Mawaqit',mawaqitHint:'Entrez le slug Mawaqit de votre mosquée',
+showMap:'Afficher la carte',hideMap:'Masquer la carte',clearCache:'Vider le cache & recharger',cacheHint:'Force le retéléchargement de toutes les ressources',
+lanternConnect:'Connecter Lanterne',lanternDisconnect:'Déconnecter Lanterne',lanternSyncing:'Synchro...',
+notifications:'Notifications',enableNotif:'Activer les notifications de prière',notifGranted:'Notifications activées ✓',
+iqamaDelays:'Délais Iqama (min)',iqamaHint:'Minutes entre adhan et iqama',
+savedLocations:'Lieux enregistrés',addLocation:'+ Enregistrer',
+lanternTest:'Test Lanterne',testAlert:'Envoyer un test',
+dataManagement:'Gestion des données',exportBtn:'Exporter',importBtn:'Importer',
+streak:'jours consécutifs',prayerLog:'Journal de Prière',tapToLog:'Appuyez après la prière',showBleLog:'Afficher le journal BLE'},
+ar:{title:'☪ أوقات الصلاة',next:'الصلاة القادمة',locate:'حدد موقعي',mosques:'مساجد',qibla:'القبلة',
+powered:'مدعوم بـ',theme:'المظهر',mode:'الوضع',engine:'المحرك',method:'الطريقة',asrSchool:'مذهب العصر',
+timeFmt:'التنسيق',settings:'⚙️ الإعدادات',search:'ابحث عن مدينة…',
+fajr:'الفجر',sunrise:'الشروق',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء',
+done:'تم ✓',now:'الآن',soon:'قادم',nearby:'🕌 مساجد قريبة',compare:'⚖️ مقارنة المحركات',prayer:'الصلاة',
+great:'ما شاء الله! واصل! 🌟',allDone:'كل الصلوات أُدّيت! 🎉',start:'بسم الله! ☀️',
+qDir:'القبلة:',walk:'دقيقة مشي',of:'من',pDone:'صلوات',
+mosqueSync:'مزامنة المسجد (فروقات)',offsetHint:'اضبط ± دقائق لكل صلاة لتتوافق مع مسجدك',
+resetOffsets:'إعادة تعيين الكل إلى 0',mawaqitLink:'رابط مواقيت',mawaqitHint:'أدخل رابط مسجدك على مواقيت',
+showMap:'عرض الخريطة',hideMap:'إخفاء الخريطة',clearCache:'مسح التخزين المؤقت وإعادة التحميل',cacheHint:'يفرض تنزيل جديد لجميع الموارد',
+lanternConnect:'توصيل الفانوس',lanternDisconnect:'فصل الفانوس',lanternSyncing:'مزامنة...',
+notifications:'الإشعارات',enableNotif:'تفعيل إشعارات الصلاة',notifGranted:'الإشعارات مفعلة ✓',
+iqamaDelays:'تأخير الإقامة (دقائق)',iqamaHint:'الدقائق بين الأذان والإقامة',
+savedLocations:'المواقع المحفوظة',addLocation:'+ حفظ الحالي',
+lanternTest:'اختبار الفانوس',testAlert:'إرسال اختبار',
+dataManagement:'إدارة البيانات',exportBtn:'تصدير',importBtn:'استيراد',
+streak:'يوم متتالي',prayerLog:'سجل الصلاة',tapToLog:'اضغط بعد الصلاة',showBleLog:'إظهار سجل BLE'}
+};
+
+// State with sensible defaults (Chelles, FR)
+let S={theme:'najm',mode:'standard',lang:'en',engine:'praytimes',method:'France',asr:'Standard',
+  fmt:'24h',lat:48.8833,lng:2.5903,loc:'Chelles, FR',cFajr:12,cIsha:12,
+  offsets:{fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0},mawaqitSlug:'',
+  iqama:{fajr:20,dhuhr:10,asr:10,maghrib:5,isha:15},locations:[],prayerLog:{},streak:0,showEcho:false};
+
+let map,uMarker,qLine,mMarkers=[],cdTimer,srchTimer;
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function init(){
+  load();
+  applyTheme();applyMode();applyLang();
+  makeStars();initSearch();
+  try{initMap()}catch(e){console.warn('Map init failed (Leaflet not loaded):',e);document.getElementById('map').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:.8rem">🗺️ Map unavailable</div>'}
+  render(); // Always render immediately with saved/default coords
+  buildOffsetGrid();
+  if(S.mawaqitSlug&&document.getElementById('mawaqitSlug'))document.getElementById('mawaqitSlug').value=S.mawaqitSlug;
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{
+      S.lat=p.coords.latitude;S.lng=p.coords.longitude;
+      revGeo(S.lat,S.lng);try{updMap()}catch(e){}save();_cachedUse=null;render();
+    },()=>{},{timeout:6000,maximumAge:60000});
+  }
+  cdTimer=setInterval(tickCD,1000);
+  // New features init
+  buildPrayerLog();checkHijriEvents();buildPresetChips();buildIqamaGrid();updateNotifBtn();
+  // Restore echo toggle
+  const echoChk=document.getElementById('echoToggle');if(echoChk)echoChk.checked=!!S.showEcho;
+  // Hide BLE button if Web Bluetooth not available
+  if(!navigator.bluetooth){const bb=document.getElementById('bleBtn');if(bb)bb.style.display='none'}
+  // Reset alert tracker at midnight
+  setInterval(()=>{const h=new Date().getHours(),m=new Date().getMinutes();
+    if(h===0&&m===0){_lastAlertPrayer='';_lastNotifPrayer='';_lastBleSync='';buildPrayerLog();checkHijriEvents()}
+  },60000);
+}
+
+function load(){try{const x=JSON.parse(localStorage.getItem('salat2'));if(x)Object.assign(S,x)}catch(e){}}
+function save(){try{localStorage.setItem('salat2',JSON.stringify(S))}catch(e){console.warn('Storage full or blocked')}}
+function t(k){return L18[S.lang]?.[k]||L18.en[k]||k}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+function toggleSettings(){
+  document.getElementById('sPanel').classList.toggle('open');
+  document.getElementById('sOverlay').classList.toggle('open');
+  syncBtns();buildOffsetGrid();
+}
+function so(b){
+  S[b.dataset.k]=b.dataset.v;
+  if(b.dataset.k==='theme')applyTheme();
+  if(b.dataset.k==='mode')applyMode();
+  _cachedUse=null;save();render();syncBtns();
+}
+function syncBtns(){
+  document.querySelectorAll('.sg-btn[data-k]').forEach(b=>b.classList.toggle('active',S[b.dataset.k]===b.dataset.v));
+  document.getElementById('selMethod').value=S.method;
+  document.getElementById('custAng').classList.toggle('show',S.method==='Custom');
+}
+function setLang(v){S.lang=v;applyLang();save();render()}
+function applyTheme(){document.documentElement.dataset.theme=S.theme}
+function applyMode(){document.documentElement.dataset.mode=S.mode}
+function applyLang(){
+  const dir=S.lang==='ar'?'rtl':'ltr';
+  document.documentElement.lang=S.lang;document.documentElement.dir=dir;
+  document.querySelectorAll('.lang-flag').forEach(b=>b.classList.toggle('active',b.dataset.lang===S.lang));
+  document.getElementById('appTitle').textContent=t('title');
+  document.getElementById('sTitle').textContent=t('settings');
+  document.getElementById('searchInput').placeholder=t('search');
+  document.getElementById('mosquesTitle').textContent=t('nearby');
+  document.getElementById('ecTitle').textContent=t('compare');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;if(L18[S.lang]?.[k])el.textContent=L18[S.lang][k]});
+}
+
+// ═══════════════════════════════════════════════════
+// PRAYER TIME COMPUTATION
+// ═══════════════════════════════════════════════════
+function getPT(){
+  try{
+    const pt=new PrayTimes(S.method==='Custom'?'MWL':S.method);
+    pt.adjust({asr:S.asr});
+    if(S.method==='Custom')pt.adjust({fajr:S.cFajr||12,isha:S.cIsha||12});
+    const now=new Date();
+    const tz=-now.getTimezoneOffset()/60; // reliable local TZ
+    const fmt=S.fmt==='12h'?'12h':'24h';
+    return pt.getTimes(now,[S.lat,S.lng],tz,0,fmt);
+  }catch(e){console.error('PrayTimes error:',e);return null}
+}
+
+let _adhanWarned=false;
+function getAD(){
+  if(typeof adhan==='undefined'){if(!_adhanWarned){console.warn('Adhan.js not loaded');_adhanWarned=true}return null}
+  try{
+    const c=new adhan.Coordinates(S.lat,S.lng);
+    const mk=()=>{
+      const m={
+        France:()=>{const p=adhan.CalculationMethod.Other();p.fajrAngle=12;p.ishaAngle=12;return p},
+        MWL:()=>adhan.CalculationMethod.MuslimWorldLeague(),
+        ISNA:()=>adhan.CalculationMethod.NorthAmerica(),
+        Egypt:()=>adhan.CalculationMethod.Egyptian(),
+        Makkah:()=>adhan.CalculationMethod.UmmAlQura(),
+        Karachi:()=>adhan.CalculationMethod.Karachi(),
+        Tehran:()=>adhan.CalculationMethod.Tehran(),
+        Jafari:()=>{const p=adhan.CalculationMethod.Other();p.fajrAngle=16;p.ishaAngle=14;return p},
+        Custom:()=>{const p=adhan.CalculationMethod.Other();p.fajrAngle=S.cFajr||12;p.ishaAngle=S.cIsha||12;return p}
+      };return(m[S.method]||m.MWL)()};
+    const params=mk();
+    params.madhab=S.asr==='Hanafi'?adhan.Madhab.Hanafi:adhan.Madhab.Shafi;
+    const pt=new adhan.PrayerTimes(c,new Date(),params);
+    const f=d=>{if(!d)return'-----';const h=d.getHours(),m=d.getMinutes();
+      if(S.fmt==='12h'){return((h+11)%12+1)+':'+(m<10?'0'+m:m)+' '+(h>=12?'pm':'am')}
+      return(h<10?'0'+h:h)+':'+(m<10?'0'+m:m)};
+    return{fajr:f(pt.fajr),sunrise:f(pt.sunrise),dhuhr:f(pt.dhuhr),asr:f(pt.asr),maghrib:f(pt.maghrib),isha:f(pt.isha)};
+  }catch(e){if(!_adhanWarned){console.warn('Adhan err:',e);_adhanWarned=true}return null}
+}
+
+function parseT(s){
+  if(!s||s==='-----')return null;
+  const parts=s.trim().replace(/\s+/g,' ').split(/[: ]/);
+  let h=parseInt(parts[0]),m=parseInt(parts[1]);
+  if(isNaN(h)||isNaN(m))return null;
+  if(parts[2]){const ap=parts[2].toLowerCase();if(ap==='pm'&&h<12)h+=12;if(ap==='am'&&h===12)h=0}
+  return h*60+m;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function render(){
+  const ptT=getPT();
+  const adT=(S.engine==='adhan'||S.engine==='both')?getAD():null;
+  const use0=S.engine==='adhan'&&adT?adT:ptT;
+  if(!use0){document.getElementById('prayerGrid').innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--text3)">⚠️ Could not compute prayer times</p>';return}
+  const use=applyOffsets(use0);
+
+  // Dates
+  const now=new Date();
+  const gregLoc=S.lang==='ar'?'ar-EG':S.lang==='fr'?'fr-FR':'en-GB';
+  document.getElementById('dateGreg').textContent=now.toLocaleDateString(gregLoc,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  try{document.getElementById('dateHijri').textContent=now.toLocaleDateString('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'})}catch(e){document.getElementById('dateHijri').textContent=''}
+  document.getElementById('locName').textContent=S.loc;
+
+  // Prayer grid
+  const grid=document.getElementById('prayerGrid');
+  grid.innerHTML='';
+  const nowMin=now.getHours()*60+now.getMinutes();
+  let nextP=null,doneN=0;
+
+  PR.forEach((p,i)=>{
+    const tStr=use[p]||'-----';
+    const pMin=parseT(tStr);
+    let st='upcoming';
+
+    if(pMin!==null&&nowMin>=pMin){
+      // Check if current (between this and next prayer)
+      let nxtMin=null;
+      for(let j=i+1;j<PR.length;j++){const nm=parseT(use[PR[j]]);if(nm!==null){nxtMin=nm;break}}
+      if(nxtMin===null)nxtMin=1440;
+      if(nowMin<nxtMin){st=p==='sunrise'?'done':'current'}else{st='done'}
+      if(p!=='sunrise'&&st!=='current')doneN++;
+      if(st==='current'&&p!=='sunrise')doneN++;
+    }
+    if(!nextP&&pMin!==null&&nowMin<pMin)nextP={name:p,min:pMin};
+
+    const card=document.createElement('div');
+    card.className='prayer-card'+(st==='current'?' active':'')+(st==='done'?' passed':'');
+    const statusText=st==='done'?t('done'):st==='current'?t('now'):t('soon');
+    card.innerHTML=`<div class="prayer-icon">${IC[p]}</div>
+      <div class="prayer-name">${t(p)}</div>
+      <div class="prayer-time-val">${tStr}</div>
+      <div class="prayer-status ${st==='done'?'done':st==='current'?'current':'upcoming'}">${statusText}</div>`;
+    grid.appendChild(card);
+  });
+
+  // Handle wrap-around (after isha → next fajr)
+  if(!nextP){const fm=parseT(use.fajr);nextP={name:'fajr',min:fm!==null?fm+1440:5*60+1440}}
+
+  // Countdown header
+  document.getElementById('cdPrayer').textContent=t(nextP.name);
+  document.getElementById('cdIcon').textContent=IC[nextP.name]||'🌙';
+  document.getElementById('cdLabel').textContent=t('next');
+  tickCD();
+
+  // Kids progress (count only real prayers, not sunrise)
+  const realDone=Math.min(doneN,5);
+  document.getElementById('kidsStars').textContent=Array.from({length:5},(_,i)=>i<realDone?'⭐':'☆').join('');
+  document.getElementById('kidsMsg').textContent=realDone>=5?t('allDone'):realDone>0?`${realDone}/5 ${t('pDone')} — ${t('great')}`:t('start');
+
+  // Engine comparison
+  const ec=document.getElementById('engineCmp');
+  if(S.engine==='both'&&adT&&ptT){
+    ec.classList.add('show');
+    document.getElementById('ecBody').innerHTML=PR.map(p=>{
+      const a=parseT(ptT[p]),b=parseT(adT[p]);
+      const d=(a!==null&&b!==null)?b-a:0;
+      const ds=d===0?'—':(d>0?'+':'')+d+'m';
+      return`<tr><td>${t(p)}</td><td>${ptT[p]}</td><td>${adT[p]}</td><td class="engine-diff${d===0?' zero':''}">${ds}</td></tr>`;
+    }).join('');
+  } else ec.classList.remove('show');
+
+  updateQibla();
+  buildPrayerLog();
+}
+
+// ═══════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════
+let _cachedUse=null, _cacheTime=0;
+function tickCD(){
+  const now=new Date();
+  // Re-compute times every 60 seconds to avoid heavy computation every tick
+  if(!_cachedUse||Date.now()-_cacheTime>60000){
+    const raw=S.engine==='adhan'?getAD():getPT();
+    _cachedUse=applyOffsets(raw);
+    _cacheTime=Date.now();
+  }
+  if(!_cachedUse)return;
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  let nextSec=null,nextName='fajr';
+  const prevNextName=document.getElementById('cdPrayer')?.textContent||'';
+  for(const p of PR){const m=parseT(_cachedUse[p]);if(m!==null&&nowSec<m*60){nextSec=m*60;nextName=p;break}}
+  if(nextSec===null){const fm=parseT(_cachedUse.fajr);nextSec=fm!==null?fm*60+86400:86400;nextName='fajr'}
+  const diff=Math.max(0,nextSec-nowSec);
+  const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60),s=diff%60;
+  document.getElementById('cdTime').textContent=`${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
+  document.getElementById('cdPrayer').textContent=t(nextName);
+  document.getElementById('cdIcon').textContent=IC[nextName]||'🌙';
+  // Reset alert tracker when prayer changes
+  if(t(nextName)!==prevNextName)_lastAlertPrayer='';
+  // BLE: alert when prayer time arrives (diff <= 1 second)
+  if(diff<=1){if(bleConnected)bleSendAlert(nextName);sendBrowserNotif(nextName)}
+  // BLE: update minutes remaining every 60s is handled by bleSyncTimer
+}
+
+// ═══════════════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════════════
+let mapVisible=false;
+function toggleMap(){
+  mapVisible=!mapVisible;
+  document.getElementById('mapSection').style.display=mapVisible?'':'none';
+  document.getElementById('mosquesList').style.display=mapVisible?'':'none';
+  document.getElementById('mapToggle').classList.toggle('on',mapVisible);
+  const label=mapVisible?t('hideMap'):t('showMap');
+  document.getElementById('mapToggle').innerHTML=`🗺️ <span data-i18n="${mapVisible?'hideMap':'showMap'}">${label}</span>`;
+  if(mapVisible&&map)setTimeout(()=>map.invalidateSize(),200);
+}
+function initMap(){
+  map=L.map('map',{zoomControl:false}).setView([S.lat,S.lng],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:18}).addTo(map);
+  uMarker=L.marker([S.lat,S.lng]).addTo(map).bindPopup('📍');
+  map.on('click',e=>{S.lat=e.latlng.lat;S.lng=e.latlng.lng;revGeo(S.lat,S.lng);updMap();save();_cachedUse=null;render()});
+  setTimeout(()=>map.invalidateSize(),500);
+}
+function updMap(){if(!map||typeof L==='undefined')return;map.setView([S.lat,S.lng],13);uMarker.setLatLng([S.lat,S.lng])}
+function doLocate(){
+  if(!navigator.geolocation)return;
+  document.getElementById('btnLocate').innerHTML='📍 <span class="spinner"></span>';
+  navigator.geolocation.getCurrentPosition(p=>{
+    S.lat=p.coords.latitude;S.lng=p.coords.longitude;
+    revGeo(S.lat,S.lng);updMap();save();_cachedUse=null;render();
+    document.getElementById('btnLocate').innerHTML=`📍 <span data-i18n="locate">${t('locate')}</span>`;
+  },()=>{document.getElementById('btnLocate').innerHTML=`📍 <span data-i18n="locate">${t('locate')}</span>`},{timeout:8000});
+}
+
+// ═══════════════════════════════════════════════════
+// REVERSE GEOCODE
+// ═══════════════════════════════════════════════════
+async function revGeo(lat,lng){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12&accept-language=${S.lang}`);
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    const city=d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||'';
+    const cc=d.address?.country_code?.toUpperCase()||'';
+    S.loc=city?`${city}, ${cc}`:`${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+  }catch(e){S.loc=`${lat.toFixed(2)}°, ${lng.toFixed(2)}°`}
+  document.getElementById('locName').textContent=S.loc;save();
+}
+
+// ═══════════════════════════════════════════════════
+// CITY SEARCH (Nominatim autocomplete)
+// ═══════════════════════════════════════════════════
+function initSearch(){
+  const inp=document.getElementById('searchInput');
+  const res=document.getElementById('searchResults');
+  inp.addEventListener('input',()=>{
+    clearTimeout(srchTimer);
+    const q=inp.value.trim();
+    if(q.length<2){res.classList.remove('show');return}
+    srchTimer=setTimeout(async()=>{
+      try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=${S.lang}`);
+        if(!r.ok)throw new Error(r.status);
+        const data=await r.json();
+        res.innerHTML='';
+        if(!data.length){res.classList.remove('show');return}
+        data.forEach(d=>{
+          const el=document.createElement('div');el.className='search-item';
+          el.textContent=d.display_name;
+          el.onclick=()=>{
+            S.lat=+d.lat;S.lng=+d.lon;
+            S.loc=d.display_name.split(',').slice(0,2).join(',').trim();
+            inp.value='';res.classList.remove('show');
+            updMap();save();_cachedUse=null;render();
+          };
+          res.appendChild(el);
+        });
+        res.classList.add('show');
+      }catch(e){res.classList.remove('show')}
+    },350);
+  });
+  inp.addEventListener('blur',()=>setTimeout(()=>res.classList.remove('show'),250));
+}
+
+// ═══════════════════════════════════════════════════
+// MOSQUE SYNC — Per-prayer offsets
+// ═══════════════════════════════════════════════════
+function buildOffsetGrid(){
+  if(!S.offsets)S.offsets={fajr:0,sunrise:0,dhuhr:0,asr:0,maghrib:0,isha:0};
+  const grid=document.getElementById('offsetGrid');if(!grid)return;
+  grid.innerHTML='';
+  PR.forEach(p=>{
+    const row=document.createElement('div');row.className='offset-row';
+    row.innerHTML=`<span class="offset-name">${IC[p]} ${t(p)}</span>
+      <input class="offset-val" type="number" id="off_${p}" value="${S.offsets[p]||0}" min="-30" max="30" step="1"
+        onchange="S.offsets['${p}']=+this.value;this.classList.add('flash');setTimeout(()=>this.classList.remove('flash'),400);_cachedUse=null;save();render()">
+      <span class="offset-unit">min</span>`;
+    grid.appendChild(row);
+  });
+}
+function resetOffsets(){
+  PR.forEach(p=>S.offsets[p]=0);
+  _cachedUse=null;save();render();buildOffsetGrid();
+}
+function applyOffsets(times){
+  if(!S.offsets||!times)return times;
+  const out={...times};
+  PR.forEach(p=>{
+    const off=S.offsets[p]||0;
+    if(off===0||!out[p]||out[p]==='-----')return;
+    const m=parseT(out[p]);
+    if(m===null)return;
+    const nm=m+off;
+    const h=Math.floor(((nm%1440)+1440)%1440/60),mn=((nm%1440)+1440)%1440%60;
+    if(S.fmt==='12h'){const ap=h>=12?'pm':'am';out[p]=((h+11)%12+1)+':'+(mn<10?'0'+mn:mn)+' '+ap}
+    else{out[p]=(h<10?'0'+h:h)+':'+(mn<10?'0'+mn:mn)}
+  });
+  return out;
+}
+function openMawaqit(){
+  const slug=document.getElementById('mawaqitSlug')?.value?.trim()||S.mawaqitSlug;
+  if(!slug){alert('Enter a Mawaqit mosque slug first');return}
+  S.mawaqitSlug=slug;save();
+  window.open('https://mawaqit.net/en/'+slug,'_blank');
+}
+
+// ═══════════════════════════════════════════════════
+// QIBLA
+// ═══════════════════════════════════════════════════
+function calcQibla(lt,ln){
+  const dL=(KA.lng-ln)*Math.PI/180,l1=lt*Math.PI/180,l2=KA.lat*Math.PI/180;
+  return(Math.atan2(Math.sin(dL)*Math.cos(l2),Math.cos(l1)*Math.sin(l2)-Math.sin(l1)*Math.cos(l2)*Math.cos(dL))*180/Math.PI+360)%360;
+}
+function updateQibla(){
+  const a=calcQibla(S.lat,S.lng),d=hav(S.lat,S.lng,KA.lat,KA.lng);
+  document.getElementById('qiblaText').textContent=`${t('qDir')} ${a.toFixed(1)}° — ${d.toFixed(0)} km`;
+}
+let qOn=false,kaabaMarker=null;
+function doQibla(){
+  if(!map)return;
+  qOn=!qOn;
+  document.getElementById('btnQibla').classList.toggle('on',qOn);
+  if(qLine){map.removeLayer(qLine);qLine=null}
+  if(kaabaMarker){map.removeLayer(kaabaMarker);kaabaMarker=null}
+  if(qOn){
+    const c=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    qLine=L.polyline([[S.lat,S.lng],[KA.lat,KA.lng]],{color:c,weight:2,dashArray:'8 4',opacity:.7}).addTo(map);
+    kaabaMarker=L.marker([KA.lat,KA.lng],{icon:L.divIcon({html:'🕋',className:'',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map);
+    map.fitBounds(qLine.getBounds(),{padding:[40,40]});
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// NEARBY MOSQUES (Overpass API)
+// ═══════════════════════════════════════════════════
+const OVERPASS_URLS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+let mosqueLoading=false,_lastMosqueLoad=0;
+async function doMosques(){
+  if(mosqueLoading||!map)return;
+  if(Date.now()-_lastMosqueLoad<15000){showToast('Please wait before searching again','warning');return}
+  _lastMosqueLoad=Date.now();
+  mMarkers.forEach(m=>map.removeLayer(m));mMarkers=[];
+  document.getElementById('mosqueCount').innerHTML='<span class="spinner"></span>';
+  mosqueLoading=true;
+  const q=`[out:json][timeout:10];node["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${S.lat},${S.lng});out body;`;
+  let data=null;
+  for(const url of OVERPASS_URLS){
+    try{
+      const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+      if(!r.ok)continue;
+      data=await r.json();
+      if(data?.elements)break;
+    }catch(e){continue}
+  }
+  mosqueLoading=false;
+  if(!data||!data.elements){document.getElementById('mosqueCount').textContent='⚠️ Server busy, retry later';return}
+  const list=document.getElementById('mosquesItems');list.innerHTML='';
+  const esc=s=>{const d=document.createElement('span');d.textContent=s;return d.innerHTML};
+  const ms=data.elements.map(e=>({
+    name:e.tags?.name||e.tags?.['name:fr']||e.tags?.['name:ar']||'Mosque',
+    lat:e.lat,lng:e.lon,dist:hav(S.lat,S.lng,e.lat,e.lon)
+  })).sort((a,b)=>a.dist-b.dist).slice(0,12);
+  document.getElementById('mosqueCount').textContent=ms.length+' found';
+  document.getElementById('mosquesList').classList.toggle('show',ms.length>0);
+  ms.forEach(m=>{
+    const safeName=esc(m.name);
+    const mk=L.marker([m.lat,m.lng],{icon:L.divIcon({html:'🕌',className:'',iconSize:[22,22],iconAnchor:[11,11]})}).addTo(map)
+      .bindPopup(`🕌 ${safeName}<br>📏 ${m.dist<1?(m.dist*1000).toFixed(0)+'m':m.dist.toFixed(1)+'km'}`);
+    mMarkers.push(mk);
+    const ds=m.dist<1?`${(m.dist*1000).toFixed(0)}m`:`${m.dist.toFixed(1)}km`;
+    const wk=Math.round(m.dist*1000/83);
+    const el=document.createElement('div');el.className='mosque-item';
+    el.innerHTML=`<span class="mosque-emoji">🕌</span><div class="mosque-info"><div class="mosque-name">${safeName}</div><div class="mosque-dist">📏 ${ds}</div></div><span class="mosque-walk">🚶 ${wk} ${t('walk')}</span>`;
+    el.onclick=()=>{map.setView([m.lat,m.lng],16);mk.openPopup()};
+    list.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function hav(a,b,c,d){const R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180,
+x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+
+function makeStars(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2.2+.4;
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${3+Math.random()*5}s;--delay:${Math.random()*6}s`;
+    c.appendChild(s)}
+}
+
+// ═══════════════════════════════════════════════════
+// BLE LANTERN — UART connection to micro:bit V2
+// ═══════════════════════════════════════════════════
+const UART_SERVICE_UUID='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const BLE_MTU_PAYLOAD=20;
+let btDevice=null,btServer=null,uartService=null,writeChar=null,notifyChar=null;
+let bleConnected=false,bleUserDisconnected=false;
+let bleReconnectAttempts=0;
+const BLE_MAX_RECONNECT=3,BLE_RECONNECT_DELAY=2000;
+let bleSyncTimer=null,_lastBleSync='',_lastAlertPrayer='';
+let _bleWriteQueue=[],_bleWriting=false;
+
+function bleLog(msg,type){
+  console.log('[BLE '+type+'] '+msg);
+  if(!S.showEcho)return;
+  const box=document.getElementById('bleEcho');if(!box)return;
+  if(bleConnected)box.classList.add('show');
+  const span=document.createElement('span');span.className=type==='rx'?'rx':type==='tx'?'tx':type==='err'?'err':'';
+  const prefix=type==='rx'?'◂ ':type==='tx'?'▸ ':'• ';
+  span.textContent=prefix+msg;box.appendChild(span);box.appendChild(document.createElement('br'));
+  box.scrollTop=box.scrollHeight;
+  // Keep max 40 lines
+  while(box.childNodes.length>80)box.removeChild(box.firstChild);
+}
+
+// Sequential write queue — prevents "GATT operation already in progress"
+function _bleProcessQueue(){
+  if(_bleWriting||_bleWriteQueue.length===0)return;
+  _bleWriting=true;
+  const {data,label}=_bleWriteQueue.shift();
+  writeChar.writeValue(data)
+    .then(()=>{bleLog('TX > '+label,'tx');_bleWriting=false;_bleProcessQueue()})
+    .catch(e=>{bleLog('TX err: '+e,'err');_bleWriting=false;_bleProcessQueue()});
+}
+
+function bleSendLine(line){
+  if(!writeChar||!bleConnected){bleLog('TX blocked > '+line,'warn');return}
+  const enc=new TextEncoder();
+  const data=enc.encode(line+'\n');
+  if(data.byteLength<=BLE_MTU_PAYLOAD){
+    _bleWriteQueue.push({data,label:line});
+    _bleProcessQueue();
+  }else{
+    let off=0;
+    while(off<data.byteLength){const end=Math.min(off+BLE_MTU_PAYLOAD,data.byteLength);
+      _bleWriteQueue.push({data:data.slice(off,end),label:off===0?line:'…chunk'});off=end}
+    _bleProcessQueue();
+  }
+}
+
+function bleOnNotification(event){
+  const dv=event.target.value;let text='';
+  for(let i=0;i<dv.byteLength;i++)text+=String.fromCharCode(dv.getUint8(i));
+  text.split(/\r?\n/).forEach(line=>{if(line.trim())bleHandleRx(line.trim())});
+}
+
+function bleHandleRx(line){
+  bleLog('RX < '+line,'rx');
+  if(line==='READY')bleSyncNow();
+  if(line.startsWith('ECHO:'))return; // already logged above
+  if(line==='BTN:A'){}// future: cycle display
+  if(line==='BTN:B'){}// future: show countdown
+  if(line==='TOUCH'){}// future: show all times
+}
+
+function bleSetStatus(connected){
+  bleConnected=connected;
+  const hDot=document.getElementById('bleHeaderDot');
+  if(hDot)hDot.classList.toggle('on',connected);
+  if(connected)showToast('🏮 Lantern connected','success');
+  else if(!bleUserDisconnected&&btDevice)showToast('🏮 Lantern disconnected','warning');
+  const btn=document.getElementById('bleBtn');
+  const label=document.getElementById('bleBtnLabel');
+  if(!btn)return;
+  btn.classList.toggle('connected',connected);
+  btn.classList.remove('syncing');
+  if(label)label.textContent=connected?t('lanternDisconnect'):t('lanternConnect');
+  if(connected){setTimeout(bleSyncNow,1500);bleSyncTimer=setInterval(bleSyncNow,60000);
+    const echo=document.getElementById('bleEcho');if(echo&&S.showEcho)echo.classList.add('show')}
+  else{if(bleSyncTimer){clearInterval(bleSyncTimer);bleSyncTimer=null}
+    const echo=document.getElementById('bleEcho');if(echo){echo.classList.remove('show');echo.innerHTML=''}}
+}
+
+function bleSyncNow(){
+  if(!bleConnected||!_cachedUse)return;
+  const btn=document.getElementById('bleBtn');
+  if(btn)btn.classList.add('syncing');
+  // Build compact payload: F06:43|S07:53|D13:03|A15:45|M18:15|I19:24
+  const PK={fajr:'F',sunrise:'S',dhuhr:'D',asr:'A',maghrib:'M',isha:'I'};
+  const parts=PR.map(p=>PK[p]+(_cachedUse[p]||'--:--'));
+  const timesStr=parts.join('|');
+  // Compute next prayer + minutes remaining
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  let nextP='F',minLeft=0;
+  let found=false;
+  for(const p of PR){
+    const m=parseT(_cachedUse[p]);
+    if(m!==null&&nowMin<m){nextP=PK[p];minLeft=m-nowMin;found=true;break}
+  }
+  if(!found){const fm=parseT(_cachedUse.fajr);nextP='F';minLeft=fm!==null?(1440-nowMin+fm):0}
+  const payload=timesStr+'|N='+nextP+'|T='+minLeft;
+  // Only send if changed (avoid spamming same data)
+  if(payload!==_lastBleSync){
+    bleSendLine('TIMES:'+payload);
+    _lastBleSync=payload;
+  }
+  setTimeout(()=>{const b=document.getElementById('bleBtn');if(b)b.classList.remove('syncing')},500);
+}
+
+function bleSendAlert(prayerKey){
+  if(!bleConnected)return;
+  const PK={fajr:'F',sunrise:'S',dhuhr:'D',asr:'A',maghrib:'M',isha:'I'};
+  const code=PK[prayerKey]||'F';
+  // Only alert once per prayer
+  if(_lastAlertPrayer===code)return;
+  _lastAlertPrayer=code;
+  bleSendLine('ALERT:'+code);
+}
+
+async function bleAttemptReconnect(){
+  if(bleUserDisconnected||!btDevice||bleReconnectAttempts>=BLE_MAX_RECONNECT){
+    if(bleReconnectAttempts>=BLE_MAX_RECONNECT)bleLog('Reconnect failed after '+BLE_MAX_RECONNECT+' attempts','err');
+    bleReconnectAttempts=0;return;
+  }
+  bleReconnectAttempts++;_bleWriteQueue=[];_bleWriting=false;
+  bleLog('Reconnecting ('+bleReconnectAttempts+'/'+BLE_MAX_RECONNECT+')...','info');
+  const delay=BLE_RECONNECT_DELAY*Math.pow(2,bleReconnectAttempts-1);
+  await new Promise(r=>setTimeout(r,delay));
+  try{
+    btServer=await btDevice.gatt.connect();
+    uartService=await btServer.getPrimaryService(UART_SERVICE_UUID);
+    const chars=await uartService.getCharacteristics();
+    let c2=null,c3=null;
+    for(const ch of chars){const id=ch.uuid.toLowerCase();if(id.includes('6e400002'))c2=ch;else if(id.includes('6e400003'))c3=ch}
+    const isN=ch=>ch&&(ch.properties.notify||ch.properties.indicate);
+    const isW=ch=>ch&&(ch.properties.write||ch.properties.writeWithoutResponse);
+    notifyChar=isN(c3)?c3:null;writeChar=isW(c2)?c2:null;
+    if(!notifyChar||!writeChar){for(const ch of chars){if(!notifyChar&&isN(ch))notifyChar=ch;if(!writeChar&&isW(ch))writeChar=ch}}
+    if(!notifyChar||!writeChar){bleLog('Reconnect: chars not found','err');bleAttemptReconnect();return}
+    await notifyChar.startNotifications();
+    notifyChar.addEventListener('characteristicvaluechanged',bleOnNotification);
+    bleSetStatus(true);bleReconnectAttempts=0;bleLog('Reconnected!','ok');
+    document.getElementById('bleBtn').disabled=false;
+    bleSendLine('HELLO');
+  }catch(e){bleLog('Reconnect failed: '+e,'err');bleAttemptReconnect()}
+}
+
+async function bleConnect(){
+  try{
+    bleUserDisconnected=false;bleReconnectAttempts=0;
+    if(!navigator.bluetooth){alert('Web Bluetooth not available. Use Chrome or Edge.');return}
+    document.getElementById('bleBtn').disabled=true;
+    bleLog('Requesting micro:bit...','info');
+    btDevice=await navigator.bluetooth.requestDevice({
+      filters:[{namePrefix:'BBC micro:bit'}],
+      optionalServices:[UART_SERVICE_UUID]
+    });
+    btDevice.addEventListener('gattserverdisconnected',()=>{
+      bleLog('Disconnected unexpectedly','err');bleSetStatus(false);bleAttemptReconnect();
+    });
+    bleLog('Connecting GATT...','info');
+    btServer=await btDevice.gatt.connect();
+    bleLog('Getting UART service...','info');
+    uartService=await btServer.getPrimaryService(UART_SERVICE_UUID);
+    bleLog('Getting characteristics...','info');
+    const chars=await uartService.getCharacteristics();
+    notifyChar=null;writeChar=null;
+    let c2=null,c3=null;
+    for(const ch of chars){const id=ch.uuid.toLowerCase();if(id.includes('6e400002'))c2=ch;else if(id.includes('6e400003'))c3=ch}
+    const isN=ch=>ch&&(ch.properties.notify||ch.properties.indicate);
+    const isW=ch=>ch&&(ch.properties.write||ch.properties.writeWithoutResponse);
+    if(isN(c3))notifyChar=c3;if(isW(c2))writeChar=c2;
+    if(!notifyChar||!writeChar){for(const ch of chars){if(!notifyChar&&isN(ch))notifyChar=ch;if(!writeChar&&isW(ch))writeChar=ch}}
+    if(!notifyChar||!writeChar){bleLog('UART chars not found','err');bleSetStatus(false);document.getElementById('bleBtn').disabled=false;return}
+    await notifyChar.startNotifications();
+    notifyChar.addEventListener('characteristicvaluechanged',bleOnNotification);
+    bleSetStatus(true);bleLog('Connected!','ok');
+    document.getElementById('bleBtn').disabled=false;
+    bleSendLine('HELLO');
+  }catch(e){
+    console.error(e);bleLog('Connect failed: '+e,'err');
+    bleSetStatus(false);document.getElementById('bleBtn').disabled=false;
+    showToast('Connection cancelled','info');
+  }
+}
+
+async function bleDisconnect(){
+  bleUserDisconnected=true;_bleWriteQueue=[];_bleWriting=false;
+  try{
+    if(notifyChar)try{await notifyChar.stopNotifications()}catch{}
+    if(btDevice&&btDevice.gatt&&btDevice.gatt.connected)btDevice.gatt.disconnect();
+  }catch(e){console.error(e)}
+  finally{bleLog('Disconnected','info');bleSetStatus(false);document.getElementById('bleBtn').disabled=false}
+}
+
+function bleToggle(){if(bleConnected)bleDisconnect();else bleConnect()}
+
+
+// ═══════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════
+function showToast(msg,type='info'){
+  const box=document.getElementById('toastBox');if(!box)return;
+  const t=document.createElement('div');t.className='toast toast-'+type;
+  t.textContent=msg;box.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove()},3800);
+}
+
+// ═══════════════════════════════════════════════════
+// BROWSER NOTIFICATIONS (#26)
+// ═══════════════════════════════════════════════════
+let _lastNotifPrayer='';
+function requestNotifPermission(){
+  if(!('Notification' in window)){showToast('Notifications not supported','error');return}
+  Notification.requestPermission().then(p=>{
+    updateNotifBtn();
+    if(p==='granted')showToast('Notifications enabled!','success');
+    else showToast('Notifications denied','warning');
+  });
+}
+function updateNotifBtn(){
+  const btn=document.getElementById('notifBtn');
+  const label=document.getElementById('notifLabel');
+  if(!btn)return;
+  if('Notification' in window && Notification.permission==='granted'){
+    btn.classList.add('granted');if(label)label.textContent=t('notifGranted');
+  }
+}
+function sendBrowserNotif(prayerKey){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(_lastNotifPrayer===prayerKey)return;
+  _lastNotifPrayer=prayerKey;
+  const names={fajr:'Fajr',sunrise:'Sunrise',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
+  try{new Notification('🕌 '+t(prayerKey)+' — '+t('title'),{
+    body:t(prayerKey)+' prayer time has arrived',icon:'apple-touch-icon.png',tag:'salat-'+prayerKey,
+    vibrate:[200,100,200]
+  })}catch(e){}
+}
+
+// ═══════════════════════════════════════════════════
+// PRAYER LOG & STREAK (#29)
+// ═══════════════════════════════════════════════════
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function buildPrayerLog(){
+  if(!S.prayerLog)S.prayerLog={};
+  const key=todayKey();
+  if(!S.prayerLog[key])S.prayerLog[key]={};
+  const bar=document.getElementById('prayerLogBar');
+  const info=document.getElementById('streakInfo');
+  if(!bar)return;
+  bar.innerHTML='';
+  const realPR=['fajr','dhuhr','asr','maghrib','isha'];
+  let done=0;
+  realPR.forEach(p=>{
+    const dot=document.createElement('div');dot.className='log-dot'+(S.prayerLog[key][p]?' logged':'');
+    dot.textContent=S.prayerLog[key][p]?'✓':IC[p];
+    dot.title=t(p)+' — '+t('tapToLog');
+    dot.onclick=()=>{S.prayerLog[key][p]=!S.prayerLog[key][p];save();buildPrayerLog();render()};
+    if(S.prayerLog[key][p])done++;
+    bar.appendChild(dot);
+  });
+  // Streak calculation
+  let streak=0;
+  const d=new Date();
+  for(let i=0;i<365;i++){
+    const k=new Date(d.getTime()-i*86400000).toISOString().slice(0,10);
+    const log=S.prayerLog[k];
+    if(log&&realPR.filter(p=>log[p]).length>=5)streak++;
+    else if(i>0)break;
+  }
+  S.streak=streak;
+  if(info){
+    if(streak>0)info.textContent='🔥 '+streak+' '+t('streak');
+    else info.textContent=done+'/5 — '+t('tapToLog');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// HIJRI CALENDAR EVENTS (#28)
+// ═══════════════════════════════════════════════════
+function checkHijriEvents(){
+  const el=document.getElementById('hijriEvent');if(!el)return;
+  try{
+    const now=new Date();
+    const hijri=now.toLocaleDateString('en-SA-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',year:'numeric'});
+    const parts=hijri.split('/');
+    const hMonth=parseInt(parts[0]),hDay=parseInt(parts[1]);
+    const events={
+      '1-1':'🎉 Islamic New Year','1-10':'Ashura',
+      '3-12':'Mawlid','9-1':'🌙 Ramadan Mubarak',
+      '9-27':'Laylat al-Qadr','10-1':'🎉 Eid al-Fitr','10-2':'🎉 Eid al-Fitr','10-3':'🎉 Eid al-Fitr',
+      '12-8':'Hajj begins','12-9':'Day of Arafah',
+      '12-10':'🎉 Eid al-Adha','12-11':'🎉 Eid al-Adha','12-12':'🎉 Eid al-Adha','12-13':'🎉 Eid al-Adha'
+    };
+    const key=hMonth+'-'+hDay;
+    if(events[key]){el.textContent=events[key];el.style.display='inline-block'}
+    else{el.style.display='none'}
+  }catch(e){el.style.display='none'}
+}
+
+// ═══════════════════════════════════════════════════
+// LOCATION PRESETS (#27)
+// ═══════════════════════════════════════════════════
+function buildPresetChips(){
+  if(!S.locations)S.locations=[];
+  const box=document.getElementById('presetChips');if(!box)return;
+  box.innerHTML='';
+  S.locations.forEach((loc,i)=>{
+    const chip=document.createElement('button');chip.className='preset-chip'+(loc.lat===S.lat&&loc.lng===S.lng?' active':'');
+    chip.textContent=loc.name||'📍';
+    chip.title='Click to switch, long-press to delete';
+    chip.onclick=()=>{S.lat=loc.lat;S.lng=loc.lng;S.loc=loc.name;save();_cachedUse=null;render();try{updMap()}catch(e){}buildPresetChips()};
+    let timer;
+    chip.onpointerdown=()=>{timer=setTimeout(()=>{S.locations.splice(i,1);save();buildPresetChips();showToast('Location removed','info')},800)};
+    chip.onpointerup=()=>clearTimeout(timer);
+    chip.onpointerleave=()=>clearTimeout(timer);
+    box.appendChild(chip);
+  });
+  const add=document.createElement('button');add.className='preset-add';
+  add.textContent=t('addLocation');
+  add.onclick=()=>{
+    if(S.locations.length>=6){showToast('Max 6 locations','warning');return}
+    if(S.locations.some(l=>l.lat===S.lat&&l.lng===S.lng)){showToast('Already saved','info');return}
+    S.locations.push({lat:S.lat,lng:S.lng,name:S.loc});save();buildPresetChips();showToast('Location saved!','success');
+  };
+  box.appendChild(add);
+}
+
+// ═══════════════════════════════════════════════════
+// IQAMA DELAYS (#18)
+// ═══════════════════════════════════════════════════
+function buildIqamaGrid(){
+  if(!S.iqama)S.iqama={fajr:20,dhuhr:10,asr:10,maghrib:5,isha:15};
+  const grid=document.getElementById('iqamaGrid');if(!grid)return;
+  grid.innerHTML='';
+  ['fajr','dhuhr','asr','maghrib','isha'].forEach(p=>{
+    const row=document.createElement('div');row.className='iqama-row';
+    row.innerHTML=`<span class="offset-name">${IC[p]} ${t(p)}</span>
+      <input class="iqama-val" type="number" value="${S.iqama[p]||10}" min="1" max="60" step="1"
+        onchange="S.iqama['${p}']=Math.max(1,Math.min(60,+this.value||10));save()">
+      <span class="offset-unit">min</span>`;
+    grid.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// CUSTOM ANGLE VALIDATION (#21)
+// ═══════════════════════════════════════════════════
+function applyCustomAngles(){
+  let f=parseFloat(document.getElementById('cFajr').value);
+  let i=parseFloat(document.getElementById('cIsha').value);
+  if(isNaN(f)||f<0||f>30){showToast('Fajr angle must be 0-30°','error');return}
+  if(isNaN(i)||i<0||i>30){showToast('Isha angle must be 0-30°','error');return}
+  S.cFajr=f;S.cIsha=i;_cachedUse=null;save();render();
+  showToast('Custom angles applied','success');
+}
+
+// ═══════════════════════════════════════════════════
+// BLE TEST ALERT (#19)
+// ═══════════════════════════════════════════════════
+function bleTestAlert(){
+  if(!bleConnected){showToast('Connect lantern first','warning');return}
+  bleSendLine('ALERT:T');
+  showToast('Test alert sent!','success');
+}
+function toggleEchoDiv(){
+  const box=document.getElementById('bleEcho');if(!box)return;
+  if(S.showEcho&&bleConnected)box.classList.add('show');
+  else{box.classList.remove('show');box.innerHTML=''}
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT / IMPORT SETTINGS (#31)
+// ═══════════════════════════════════════════════════
+function exportSettings(){
+  const data=JSON.stringify(S,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='salat-settings.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('Settings exported','success');
+}
+function importSettings(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        Object.assign(S,data);save();
+        applyTheme();applyMode();applyLang();_cachedUse=null;render();
+        buildOffsetGrid();buildIqamaGrid();buildPresetChips();buildPrayerLog();
+        showToast('Settings imported!','success');
+      }catch(err){showToast('Invalid settings file','error')}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ═══════════════════════════════════════════════════
+// QR SHARE (simplified — copy link with settings hash)
+// ═══════════════════════════════════════════════════
+
+
+
+window.addEventListener('DOMContentLoaded',init);
+
+// ═══════════════════════════════════════════════════
+// SERVICE WORKER & CACHE
+// ═══════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data==='CACHE_CLEARED')location.reload(true);
+  });
+}
+function clearAppCache(){
+  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage('CLEAR_CACHE');
+  }
+  if('caches' in window){
+    caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).then(()=>location.reload(true));
+  } else {
+    location.reload(true);
+  }
+}
+</script>
+</body>
+</html>
